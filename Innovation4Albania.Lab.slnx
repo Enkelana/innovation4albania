@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Innovation4Albania.API/Innovation4Albania.API.csproj" />
+  <Project Path="Innovation4Albania.Application/Innovation4Albania.Application.csproj" />
+  <Project Path="Innovation4Albania.Domain/Innovation4Albania.Domain.csproj" />
+  <Project Path="Innovation4Albania.Infrastructure/Innovation4Albania.Infrastructure.csproj" />
+</Solution>

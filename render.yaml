@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: innovation4albania-lab
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true

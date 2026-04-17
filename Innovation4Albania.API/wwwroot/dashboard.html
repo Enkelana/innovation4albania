@@ -1,0 +1,825 @@
+﻿<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Innovation4Albania | Paneli</title>
+    <link rel="stylesheet" href="/styles.css?v=20260404b">
+</head>
+<body data-page="dashboard">
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand-block" href="/dashboard.html">
+                <span class="brand-mark">I4A</span>
+                <div>
+                    <strong>Innovation4Albania</strong>
+                    <span>Hapesira publike e inovacionit</span>
+                </div>
+            </a>
+
+            <div class="sidebar-profile">
+                <span class="section-kicker">Sesioni</span>
+                <strong id="sessionName">Po ngarkohet...</strong>
+                <span id="sessionRole" class="pill neutral">Roli</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a class="nav-link active" href="/dashboard.html?view=overview" data-view="overview" data-i18n="nav.overview">Permbledhje</a>
+                <a class="nav-link" href="/dashboard.html?view=projects" data-view="projects" data-i18n="nav.projects">Projektet</a>
+                <a class="nav-link" href="/dashboard.html?view=charts" data-view="charts">Grafiket</a>
+                <a class="nav-link" href="/director/calendar" data-view="calendar" data-i18n="nav.calendar">Kalendar</a>
+                <a class="nav-link" href="/director/okrs" data-view="okrs">OKR</a>
+                <a class="nav-link" href="/dashboard.html?view=project-detail" data-view="project-detail" data-i18n="nav.projectDetail">Detajet e projektit</a>
+                <a class="nav-link" href="/director/import" data-view="import" data-i18n="nav.import">Importo</a>
+                <a class="nav-link" href="/dashboard.html?view=ministries" data-view="ministries" data-i18n="nav.ministries">Ministrite</a>
+                <a class="nav-link" href="/dashboard.html?view=experts" data-view="experts" data-i18n="nav.members">Anetaret</a>
+                        <a class="nav-link" href="/dashboard.html?view=documents" data-view="documents" data-i18n="nav.documents">Dokumentet</a>
+                        <a class="nav-link" href="/director/tasks" data-view="tasks">Detyrat</a>
+                        <a class="nav-link" href="/dashboard.html?view=workflow" data-view="workflow" data-i18n="nav.workflow">Rrjedha e punes</a>
+                <a class="nav-link" href="/dashboard.html?view=alerts" data-view="alerts" data-i18n="nav.alerts">Alertet</a>
+                <a class="nav-link" href="/director/settings" data-view="sync" data-i18n="nav.settings">Cilesimet</a>
+                <a class="nav-link" href="/notifications" data-view="notifications" data-i18n="nav.notifications">Njoftimet</a>
+                <a class="nav-link" href="/dashboard.html?view=logs" data-view="logs" data-feature="logs" data-i18n="nav.logs">Historiku</a>
+            </nav>
+
+            <div class="sidebar-footnote">
+                <p id="roleSummary">Pamje e personalizuar sipas rolit.</p>
+                <button class="ghost-link" type="button" data-action="logout" data-i18n="actions.logout">Dil nga demo</button>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="page-header" id="overview">
+                <div>
+                    <span class="eyebrow">Hapesire strategjike dhe operacionale</span>
+                    <h1 id="pageTitle">Paneli</h1>
+                    <p id="pageSubtitle">Po ngarkohen te dhenat e platformes...</p>
+                </div>
+                <div class="header-actions">
+                    <button id="languageToggleButton" class="ghost-button" type="button">🇦🇱 SQ</button>
+                    <button id="themeToggleButton" class="ghost-button" type="button">☀️</button>
+                    <button id="navbarBellButton" class="ghost-button" type="button">🔔</button>
+                    <button id="exportPdfButton" class="ghost-button" type="button">Shkarko PDF</button>
+                    <button id="exportExcelButton" class="ghost-button" type="button">Shkarko Excel</button>
+                    <button id="exportBadge" class="ghost-button export-badge" type="button">Eksport raporte</button>
+                    <button id="refreshDashboardButton" class="secondary-button" type="button">Rifresko</button>
+                </div>
+            </header>
+
+            <div class="print-header">
+                <h1>Innovation4Albania</h1>
+                <p id="printMeta">Pamje e printuar nga platforma</p>
+            </div>
+
+            <div id="feedbackBanner" class="feedback-banner hidden"></div>
+            <div id="globalAlertBanner" class="global-alert-banner hidden"></div>
+
+            <main class="content-stack">
+                <section id="statsGrid" class="stats-grid"></section>
+
+                <section class="content-grid analytics-deck analytics-three-up" id="macroCharts">
+                    <article class="panel-card macro-donut-panel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Pie / Donut</span>
+                                <h2>Kompozimi i portofolit</h2>
+                            </div>
+                        </div>
+                        <div id="portfolioDonutChart" class="donut-chart"></div>
+                        <div id="portfolioDonutLegend" class="chart-legend"></div>
+                    </article>
+
+                    <article class="panel-card macro-alerts-panel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Risk / Alerts</span>
+                                <h2>Presioni i portofolit</h2>
+                            </div>
+                        </div>
+                        <div id="alertsRiskChart" class="alerts-risk-chart"></div>
+                    </article>
+
+                    <article class="panel-card comparison-panel macro-comparison-panel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Krahasimi i periudhave</span>
+                                <h2>KPI dhe performanca</h2>
+                            </div>
+                        </div>
+                        <div class="period-toolbar">
+                            <label>Krahaso
+                                <select id="periodCurrentSelect" class="text-input">
+                                    <option value="thisMonth">Ky Muaj</option>
+                                    <option value="lastMonth">Muaji i Kaluar</option>
+                                    <option value="last3Months">3 Muajt e Fundit</option>
+                                    <option value="last6Months">6 Muajt e Fundit</option>
+                                    <option value="thisYear">Ky Vit</option>
+                                    <option value="lastYear">Viti i Kaluar</option>
+                                </select>
+                            </label>
+                            <label>Kundrejt
+                                <select id="periodPreviousSelect" class="text-input">
+                                    <option value="lastMonth">Muaji i Kaluar</option>
+                                    <option value="thisMonth">Ky Muaj</option>
+                                    <option value="last3Months">3 Muajt e Fundit</option>
+                                    <option value="last6Months">6 Muajt e Fundit</option>
+                                    <option value="thisYear">Ky Vit</option>
+                                    <option value="lastYear">Viti i Kaluar</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div id="periodComparisonCards" class="comparison-cards"></div>
+                        <div id="periodTrendChart" class="trend-grid-chart"></div>
+                        <div id="periodTrendSummary" class="trend-legend-panel"></div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ministria</th>
+                                        <th>KPI aktual</th>
+                                        <th>KPI krahasues</th>
+                                        <th>Ndryshimi</th>
+                                        <th>Trendi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="periodComparisonTable"></tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="panel-card director-priority-section" id="directorPrioritySection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Prioritetet e menjehershme</span>
+                            <h2>Njoftimet kryesore per drejtorin</h2>
+                            <p>Sinjalet qe kerkojne vemendje te shpejte ne nivel portofoli dhe ekzekutimi.</p>
+                        </div>
+                    </div>
+                    <div id="directorPriorityGrid" class="director-priority-grid"></div>
+                </section>
+
+                <section class="panel-card minister-executive-section" id="ministerExecutiveSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Pamje ekzekutive</span>
+                            <h2>Prioritetet kombetare ne nje rresht</h2>
+                            <p>Treguesit kryesorë, ministritë me performancën më të lartë dhe rastet që kërkojnë vendim të shpejtë.</p>
+                        </div>
+                    </div>
+                    <div id="ministerExecutiveRail" class="minister-executive-rail"></div>
+                </section>
+
+                <section class="content-grid analytics-deck two-column" id="macroRankingSection">
+                    <article class="panel-card ministry-ranking-panel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Renditje</span>
+                                <h2>Performanca e ministrive</h2>
+                            </div>
+                        </div>
+                        <div id="ministryChart" class="stack-list"></div>
+                    </article>
+
+                    <article class="panel-card stacked-status-panel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Stacked Bar Chart</span>
+                                <h2>Statuset sipas ministrive</h2>
+                            </div>
+                        </div>
+                        <div id="stackedStatusChart" class="stacked-status-chart"></div>
+                    </article>
+                </section>
+
+                <section class="panel-card expert-projects-overview-section" id="expertProjectsOverviewSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Projektet e mia</span>
+                            <h2>Ndjekja e progresit</h2>
+                            <p>Lista e projekteve të ministrisë tënde me progresin dhe statusin aktual.</p>
+                        </div>
+                    </div>
+                    <div id="expertProjectsOverviewList" class="expert-projects-overview-list"></div>
+                </section>
+
+                <section class="content-grid two-column" id="overviewInsightsRow">
+                    <section class="panel-card ministry-progress-panel" id="ministryProgressSection">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Progresi sipas ministrive</span>
+                                <h2>Ecuria e portofolit institucional</h2>
+                                <p>Shikoni progresin mesatar të projekteve për secilën ministri, me ngjyra sipas nivelit të realizimit.</p>
+                            </div>
+                        </div>
+                        <div id="ministryProgressList" class="ministry-progress-list"></div>
+                    </section>
+
+                    <section class="content-stack overview-side-stack" id="overviewBoard">
+                        <section class="panel-card okr-objectives-panel" id="okrObjectivesOverviewSection">
+                            <div class="list-card-header">
+                                <div>
+                                    <span class="section-kicker">Objektivat strategjike</span>
+                                    <h2>Objektivat prioritare</h2>
+                                </div>
+                            </div>
+                            <div id="okrObjectivesOverviewList" class="okr-objectives-overview-list"></div>
+                        </section>
+
+                        <section class="content-grid two-column overview-alerts-progress-row" id="overviewAlertsProgressRow">
+                            <article class="panel-card alerts-panel" id="alerts">
+                                <div class="list-card-header">
+                                    <div>
+                                        <span class="section-kicker">Prioritetet</span>
+                                        <h2>Alertet kryesore</h2>
+                                    </div>
+                                </div>
+                                <div id="alertsList" class="stack-list alerts-grid"></div>
+                            </article>
+
+                            <article class="panel-card ministry-progress-compact-panel" id="overviewMinistryProgressSection">
+                                <div class="list-card-header">
+                                    <div>
+                                        <span class="section-kicker">Progresi sipas ministrive</span>
+                                        <h2>Ecuria institucionale</h2>
+                                    </div>
+                                </div>
+                                <div id="overviewMinistryProgressList" class="ministry-progress-list compact"></div>
+                            </article>
+                        </section>
+
+                    </section>
+                </section>
+
+                <section class="panel-card" id="projects">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Menaxhimi i projekteve</span>
+                            <h2>Projektet</h2>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="printProjectsButton" class="ghost-button" type="button">Printo Listen</button>
+                        </div>
+                    </div>
+                    <div class="toolbar-grid">
+                        <input id="projectSearchInput" class="text-input" type="search" placeholder="Kerko projektin ose pergjegjesin">
+                        <select id="projectStatusFilter" class="text-input">
+                            <option value="All">Te gjitha statuset</option>
+                            <option value="Active">Aktiv</option>
+                            <option value="InProcess">Ne proces</option>
+                            <option value="Completed">Perfunduar</option>
+                            <option value="Cancelled">Anuluar</option>
+                        </select>
+                    </div>
+                    <div id="projectsLayout" class="content-grid two-column">
+                        <div id="projectsList" class="project-grid"></div>
+                        <form id="projectForm" class="form-card">
+                            <div class="form-heading">
+                                <strong>Redaktori i projektit</strong>
+                                <small id="projectFormMode">Krijo ose perditeso nje projekt</small>
+                            </div>
+                            <div class="form-actions">
+                                <button id="projectPdfAutofillButton" class="ghost-button" type="button">Ngarko PDF per Auto-Plotësim</button>
+                            </div>
+                            <input id="projectId" type="hidden">
+                            <label>Titulli<input id="projectTitle" class="text-input" required></label>
+                            <label>Ministria<select id="projectMinistry" class="text-input" required></select></label>
+                            <label>Statusi<select id="projectStatus" class="text-input" required>
+                                <option value="Active">Aktiv</option>
+                                <option value="InProcess">Ne proces</option>
+                                <option value="Completed">Perfunduar</option>
+                                <option value="Cancelled">Anuluar</option>
+                            </select></label>
+                            <div class="split-grid">
+                                <label>Data e fillimit<input id="projectStartDate" class="text-input" type="date" required></label>
+                                <label>Afati<input id="projectDueDate" class="text-input" type="date" required></label>
+                            </div>
+                            <div class="split-grid">
+                                <label>KPI %<input id="projectKpi" class="text-input" type="number" min="0" max="100" required></label>
+                                <label>Progresi %<input id="projectProgress" class="text-input" type="number" min="0" max="100" required></label>
+                            </div>
+                            <label>Pergjegjesi<input id="projectOwner" class="text-input" required></label>
+                            <label>Arsyeja e anulimit<textarea id="projectCancellationReason" class="text-input" rows="3"></textarea></label>
+                            <div class="form-actions">
+                                <button class="secondary-button" type="submit" data-requires="projects">Ruaj projektin</button>
+                                <button id="projectResetButton" class="ghost-button" type="button">Pastro</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="content-grid two-column director-experts-layout" id="expertsSection">
+                    <article class="panel-card">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Planifikimi i burimeve</span>
+                                <h2>Ekspertet</h2>
+                            </div>
+                        </div>
+                        <div id="expertsList" class="stack-list experts-list"></div>
+                    </article>
+                    <form id="expertForm" class="panel-card form-card expert-editor-form">
+                        <div class="form-heading">
+                            <strong>Redaktori i ekspertit</strong>
+                            <small>Krijo ose perditeso caktimet e eksperteve</small>
+                        </div>
+                        <input id="expertId" type="hidden">
+                        <label>Emri i plote<input id="expertName" class="text-input" required></label>
+                        <label>Email<input id="expertEmail" class="text-input" type="email" required></label>
+                        <label>Ministria<select id="expertMinistry" class="text-input" required></select></label>
+                        <label>Roli<input id="expertRoleTitle" class="text-input" value="Ekspert Inovacioni" required></label>
+                        <label>Kodi i ri i aksesit te ministrise<input id="expertAccessCodeInput" class="text-input" placeholder="Opsionale per perditesim kodi"></label>
+                        <div class="form-actions">
+                            <button class="secondary-button" type="submit" data-requires="experts">Ruaj ekspertin</button>
+                            <button id="expertResetButton" class="ghost-button" type="button">Pastro</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="content-grid two-column director-documents-layout" id="documentsSection">
+                    <article class="panel-card">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Skedaret e projektit</span>
+                                <h2>Dokumentet</h2>
+                            </div>
+                        </div>
+                        <div id="documentsList" class="stack-list documents-list"></div>
+                    </article>
+                    <form id="documentForm" class="panel-card form-card document-editor-form">
+                        <div class="form-heading">
+                            <strong>Regjistro dokument</strong>
+                            <small>Regjistrim i te dhenave baze per kete faze</small>
+                        </div>
+                        <label>Projekti<select id="documentProjectId" class="text-input" required></select></label>
+                        <label>Emri i dokumentit<input id="documentName" class="text-input" required></label>
+                        <label>Lloji i skedarit<select id="documentFileType" class="text-input" required>
+                            <option value="PDF">PDF</option>
+                            <option value="DOCX">DOCX</option>
+                            <option value="XLSX">XLSX</option>
+                            <option value="ZIP">ZIP</option>
+                        </select></label>
+                        <div class="form-actions">
+                            <button class="secondary-button" type="submit" data-requires="documents">Shto dokument</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="content-grid two-column" id="workflowSection">
+                    <article class="panel-card">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Rrjedha e ekzekutimit</span>
+                                <h2>Rrjedha e punes</h2>
+                            </div>
+                        </div>
+                        <div id="workflowList" class="stack-list workflow-list"></div>
+                    </article>
+                    <form id="workflowForm" class="panel-card form-card workflow-form">
+                        <div class="form-heading">
+                            <strong>Redaktori i hapave te rrjedhes se punes</strong>
+                            <small>Menaxho miratimet dhe detyrat</small>
+                        </div>
+                        <input id="workflowId" type="hidden">
+                        <label>Projekti<select id="workflowProjectId" class="text-input" required></select></label>
+                        <div class="split-grid">
+                            <label>Nr. i hapit<input id="workflowStepNumber" class="text-input" type="number" min="1" required></label>
+                            <label>Progresi %<input id="workflowProgress" class="text-input" type="number" min="0" max="100" required></label>
+                        </div>
+                        <label>Pershkrimi<input id="workflowDescription" class="text-input" required></label>
+                        <label>Statusi<input id="workflowStatus" class="text-input" required></label>
+                        <div class="split-grid">
+                            <label>Afati<input id="workflowDueDate" class="text-input" type="date" required></label>
+                            <label>Pergjegjesi<input id="workflowOwner" class="text-input" required></label>
+                        </div>
+                        <div class="form-actions">
+                            <button class="secondary-button" type="submit" data-requires="workflow">Ruaj rrjedhen e punes</button>
+                            <button id="workflowResetButton" class="ghost-button" type="button">Pastro</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="content-grid two-column" id="notesSection">
+                    <article class="panel-card">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Shenime</span>
+                                <h2>Shenimet e projektit</h2>
+                            </div>
+                        </div>
+                        <div id="notesList" class="stack-list notes-list"></div>
+                    </article>
+                    <form id="noteForm" class="panel-card form-card notes-form">
+                        <div class="form-heading">
+                            <strong>Shto shenim</strong>
+                            <small>Komente operative dhe kontekst pune</small>
+                        </div>
+                        <label>Projekti<select id="noteProjectId" class="text-input" required></select></label>
+                        <label>Komenti<textarea id="noteContent" class="text-input" rows="5" required></textarea></label>
+                        <label class="checkbox-row"><input id="noteIsPrivate" type="checkbox"> Shenim privat (vetem drejtori)</label>
+                        <div class="form-actions">
+                            <button class="secondary-button" type="submit" data-requires="notes">Shto shenim</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="content-grid two-column" id="alertsConfigSection">
+                    <form id="alertSettingsForm" class="panel-card form-card">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Konfigurimi i alerteve</span>
+                                <h2>Pragjet dhe marresit</h2>
+                            </div>
+                        </div>
+                        <div class="split-grid">
+                            <label>Pragu kritik KPI %<input id="criticalKpiThreshold" class="text-input" type="number" min="0" max="100" required></label>
+                            <label>Pragu i kujdesit KPI %<input id="warningKpiThreshold" class="text-input" type="number" min="0" max="100" required></label>
+                        </div>
+                        <label>Ditet para afatit<input id="warningDaysBeforeDeadline" class="text-input" type="number" min="1" max="60" required></label>
+                        <label>Marresit e emailit<textarea id="alertEmailRecipients" class="text-input" rows="4" required></textarea></label>
+                        <div class="form-actions">
+                            <button class="secondary-button" type="submit" data-requires="alerts">Ruaj alertet</button>
+                        </div>
+                    </form>
+
+                    <article class="panel-card" id="sync">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Sinkronizimi i te dhenave</span>
+                                <h2>Burimet e sinkronizimit</h2>
+                            </div>
+                        </div>
+                        <div id="syncCard" class="sync-card"></div>
+                        <div class="form-actions">
+                            <button id="syncRefreshButton" class="secondary-button" type="button" data-requires="sync">Rifresko sinkronizimin</button>
+                        </div>
+                    </article>
+
+                    <article class="panel-card" id="monthlyReportsCard">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Raporte automatike</span>
+                                <h2>Raporti mujor</h2>
+                            </div>
+                        </div>
+                        <div id="monthlyReportStatus" class="sync-card"></div>
+                        <label class="checkbox-row">
+                            <input id="monthlyReportsEnabled" type="checkbox">
+                            Aktivizo raportet mujore automatike
+                        </label>
+                        <div class="form-actions">
+                            <button id="previewMonthlyReportButton" class="ghost-button" type="button">Shiko Shabllon Email-i</button>
+                            <button id="openMonthlyReportWindowButton" class="ghost-button" type="button">Hap per Printim</button>
+                            <button id="sendMonthlyReportButton" class="secondary-button" type="button">Gjenero dhe Dergo Tani</button>
+                        </div>
+                        <div id="monthlyReportPreview" class="report-preview hidden"></div>
+                    </article>
+
+                    <article class="panel-card" id="aiAlertsSettingsCard">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Inteligjenca artificiale</span>
+                                <h2>Smart Alerts</h2>
+                            </div>
+                        </div>
+                        <label class="checkbox-row">
+                            <input id="aiAlertsEnabled" type="checkbox">
+                            Aktivizo alertet AI
+                        </label>
+                        <label>Frekuenca
+                            <select id="aiAlertsFrequency" class="text-input">
+                                <option value="daily">Çdo ditë</option>
+                                <option value="3days">Çdo 3 ditë</option>
+                                <option value="weekly">Çdo javë</option>
+                            </select>
+                        </label>
+                        <div id="smartAlertsFeedbackSummary" class="tasks-summary-bar"></div>
+                        <div class="form-actions">
+                            <button id="refreshSmartAlertsButton" class="secondary-button" type="button">Rifresko Alertet AI</button>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="content-grid two-column" id="analyticsSection">
+                    <article class="panel-card timeline-panel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Line Chart</span>
+                                <h2>Progresi ne kohe</h2>
+                            </div>
+                        </div>
+                        <div id="timelineChart" class="timeline-chart"></div>
+                    </article>
+
+                    <article class="panel-card" id="roleActions">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Veprimet e rolit</span>
+                                <h2>Cfare mund te beje ky rol</h2>
+                            </div>
+                        </div>
+                        <div id="capabilitiesGrid" class="capability-grid"></div>
+                    </article>
+
+                    <article class="panel-card map-panel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Rajonet</span>
+                                <h2>Performanca e Inovacionit sipas Rajonit</h2>
+                                <p>Shikoni shpërndarjen vizuale të performancës sipas qarqeve dhe hapni menjëherë ministrinë përkatëse.</p>
+                            </div>
+                        </div>
+                        <div class="map-layout">
+                            <div id="albaniaMap" class="albania-map"></div>
+                            <div class="map-side-panel">
+                                <div id="mapOverviewStats" class="map-overview-stats"></div>
+                                <div class="map-side-card">
+                                    <div class="section-heading-row">
+                                        <strong>Legjenda e performancës</strong>
+                                    </div>
+                                    <div class="map-legend">
+                                        <span><i class="legend-dot excellent"></i> ≥75%</span>
+                                        <span><i class="legend-dot good"></i> 60-74%</span>
+                                        <span><i class="legend-dot watch"></i> 40-59%</span>
+                                        <span><i class="legend-dot critical"></i> &lt;40%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="panel-card" id="riskHeatmapPanel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Parashikimi AI</span>
+                                <h2>Harta e nxehtësisë së riskut</h2>
+                                <p>Analiza e shpejtë e projekteve sipas nivelit të riskut, për të identifikuar menjëherë rastet që kërkojnë ndërhyrje.</p>
+                            </div>
+                        </div>
+                        <div id="riskHeatmapSummary" class="risk-heatmap-summary"></div>
+                        <div id="riskHeatmapGrid" class="risk-heatmap-grid"></div>
+                    </article>
+                </section>
+
+                <section class="panel-card ministry-progress-panel ministry-progress-panel-overview" id="ministerOverviewMinistryProgressSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Progresi sipas ministrive</span>
+                            <h2>Ecuria e portofolit institucional</h2>
+                            <p>Shikoni progresin mesatar të projekteve për secilën ministri, me ngjyra sipas nivelit të realizimit.</p>
+                        </div>
+                    </div>
+                    <div id="ministerOverviewMinistryProgressList" class="ministry-progress-list"></div>
+                </section>
+
+                <section class="panel-card" id="logs">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Gjurma e auditimit</span>
+                            <h2>Historiku i ndryshimeve</h2>
+                        </div>
+                    </div>
+                    <div id="logsList" class="stack-list empty-state">Ky rol nuk ka akses ne historikun e ndryshimeve.</div>
+                </section>
+
+                <section class="content-grid two-column" id="ministriesSection">
+                    <article class="panel-card">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Rrjeti institucional</span>
+                            <h2>Lista e ministrive</h2>
+                        </div>
+                        </div>
+                        <div id="ministriesCards" class="project-grid"></div>
+                    </article>
+                    <article class="panel-card" id="ministryDetailPanel">
+                        <div class="list-card-header">
+                            <div>
+                                <span class="section-kicker">Detajet e ministrise</span>
+                                <h2 id="ministryDetailTitle">Zgjidh nje ministri</h2>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="printMinistryButton" class="ghost-button" type="button">Printo Ministrine</button>
+                            </div>
+                        </div>
+                        <div id="ministryDetailContent" class="stack-list"></div>
+                    </article>
+                </section>
+
+                <section class="panel-card" id="projectDetailSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Pamja e projektit</span>
+                            <h2 id="projectDetailTitle">Zgjidh nje projekt</h2>
+                        </div>
+                        <div class="action-buttons">
+                            <select id="projectDetailSelector" class="text-input">
+                                <option value="">Zgjidh projektin</option>
+                            </select>
+                            <button id="printProjectButton" class="ghost-button" type="button">Printo Projektin</button>
+                            <button id="projectAiSummaryButton" class="ghost-button" type="button">Përmbledhje AI</button>
+                            <button id="projectQrButton" class="ghost-button" type="button">QR Kodi</button>
+                        </div>
+                    </div>
+
+                    <div id="projectDetailHeader" class="project-detail-hero"></div>
+
+                    <div class="detail-tabs">
+                        <button class="detail-tab active" type="button" data-detail-tab="workflow">Workflow</button>
+                        <button class="detail-tab" type="button" data-detail-tab="documents">Dokumente</button>
+                        <button class="detail-tab" type="button" data-detail-tab="comments">Komente</button>
+                        <button class="detail-tab" type="button" data-detail-tab="meetings">Takimet</button>
+                        <button class="detail-tab" type="button" data-detail-tab="tasks">Detyrat</button>
+                        <button class="detail-tab" type="button" data-detail-tab="milestones">Piketa</button>
+                        <button class="detail-tab" type="button" data-detail-tab="gallery">Galeria</button>
+                        <button class="detail-tab" type="button" data-detail-tab="risk-ai">Risku AI</button>
+                        <button class="detail-tab" type="button" data-detail-tab="okr">OKR</button>
+                        <button class="detail-tab" type="button" data-detail-tab="history">Historik</button>
+                    </div>
+
+                    <div id="detailTabWorkflow" class="detail-tab-panel"></div>
+                    <div id="detailTabDocuments" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabComments" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabMeetings" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabTasks" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabMilestones" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabGallery" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabRiskAi" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabOkr" class="detail-tab-panel hidden"></div>
+                    <div id="detailTabHistory" class="detail-tab-panel hidden"></div>
+                </section>
+
+                <section class="panel-card" id="tasksSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Ngarkesa operacionale</span>
+                            <h2>Detyrat ne te gjitha projektet</h2>
+                            <p>Pamje e pergjithshme e detyrave sipas statusit, prioritetit dhe projektit.</p>
+                        </div>
+                    </div>
+                    <div class="toolbar-grid">
+                        <select id="tasksProjectFilter" class="text-input"></select>
+                        <select id="tasksStatusFilter" class="text-input">
+                            <option value="all">Te gjitha statuset</option>
+                            <option value="todo">Per t'u bere</option>
+                            <option value="in_progress">Ne progres</option>
+                            <option value="review">Ne shqyrtim</option>
+                            <option value="done">Perfunduar</option>
+                        </select>
+                        <select id="tasksPriorityFilter" class="text-input">
+                            <option value="all">Te gjitha prioritetet</option>
+                            <option value="urgent">Urgjente</option>
+                            <option value="high">E larte</option>
+                            <option value="medium">Mesatare</option>
+                            <option value="low">E ulet</option>
+                        </select>
+                    </div>
+                    <div id="tasksSummaryBar" class="tasks-summary-bar"></div>
+                    <div id="tasksBoard" class="tasks-board"></div>
+                </section>
+
+                <section class="panel-card" id="okrsSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Objektivat dhe rezultatet kyce</span>
+                            <h2>OKR</h2>
+                            <p>Percakto objektivat dhe lidhi projektet me rezultatet kyce.</p>
+                        </div>
+                    </div>
+                    <div id="okrsSummaryBar" class="tasks-summary-bar"></div>
+                    <div id="okrsLayout" class="content-grid two-column okr-layout">
+                        <div id="okrsList" class="stack-list okr-list"></div>
+                        <form id="okrForm" class="panel-card form-card okr-form">
+                            <div class="form-heading">
+                                <strong>Krijo ose perditeso OKR</strong>
+                                <small>Vetem drejtori mund te menaxhoje objektivat dhe Key Results.</small>
+                            </div>
+                            <input id="okrId" type="hidden">
+                            <label>Ministria<select id="okrMinistryId" class="text-input" required></select></label>
+                            <label>Titulli i objektivit<input id="okrTitle" class="text-input" required></label>
+                            <label>Pershkrimi<textarea id="okrDescription" class="text-input" rows="4"></textarea></label>
+                            <label>Periudha<select id="okrPeriod" class="text-input" required>
+                                <option value="Q1 2026">Q1 2026</option>
+                                <option value="Q2 2026">Q2 2026</option>
+                                <option value="Q3 2026">Q3 2026</option>
+                                <option value="Q4 2026">Q4 2026</option>
+                                <option value="2026">Viti 2026</option>
+                            </select></label>
+                            <div id="okrKeyResultsInputs" class="stack-list okr-key-results-inputs"></div>
+                            <div class="form-actions">
+                                <button id="okrAddKeyResultButton" class="ghost-button" type="button">Shto Key Result</button>
+                                <button class="secondary-button" type="submit">Ruaj OKR</button>
+                                <button id="okrResetButton" class="ghost-button" type="button">Pastro</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="panel-card" id="calendarSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Kalendar</span>
+                            <h2>Kalendar i afateve</h2>
+                        </div>
+                    </div>
+                    <div class="toolbar-grid">
+                        <select id="calendarMinistryFilter" class="text-input"></select>
+                        <select id="calendarStatusFilter" class="text-input">
+                            <option value="all">Te gjitha</option>
+                            <option value="active">Active</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="at_risk">At Risk</option>
+                        </select>
+                    </div>
+                    <label>KPI minimum <input id="calendarKpiFilter" class="text-input" type="range" min="0" max="100" value="0"></label>
+                    <div class="calendar-layout">
+                        <div>
+                            <div class="list-card-header">
+                                <div>
+                                    <span class="section-kicker">Kalendar 2026</span>
+                                    <h2 id="calendarMonthTitle">Zgjidh muajin</h2>
+                                </div>
+                                <span id="calendarMonthSummary" class="pill neutral">0 projekte</span>
+                            </div>
+                            <div id="calendarMonthPicker" class="calendar-month-picker"></div>
+                            <div id="calendarGrid" class="calendar-timeline"></div>
+                            <div class="calendar-legend">
+                        <span><strong>🟢</strong> Ne rregull</span>
+                        <span><strong>🟠</strong> Ne risk</span>
+                        <span><strong>🔴</strong> Kritik / Vonuar</span>
+                            </div>
+                        </div>
+                        <aside id="calendarDrawer" class="calendar-drawer">
+                            <div class="empty-state">Kliko nje event per te pare detajet.</div>
+                        </aside>
+                    </div>
+                </section>
+
+                <section class="panel-card" id="notificationsSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Qendra e njoftimeve</span>
+                            <h2>Njoftimet</h2>
+                        </div>
+                        <div class="header-actions">
+                            <button id="markAllNotificationsButton" class="ghost-button" type="button">Sheno te gjitha si te lexuara</button>
+                            <button id="clearReadNotificationsButton" class="ghost-button" type="button">Fshi te lexuarat</button>
+                        </div>
+                    </div>
+                    <div id="notificationsBell" class="notification-bell"></div>
+                    <div id="notificationsList" class="stack-list"></div>
+                </section>
+
+                <section class="panel-card" id="importSection">
+                    <div class="list-card-header">
+                        <div>
+                            <span class="section-kicker">Import masiv</span>
+                            <h2>Importo Projekte</h2>
+                        </div>
+                    </div>
+                    <div class="import-actions">
+                            <button id="downloadTemplateButton" class="ghost-button" type="button">Shkarko Shabllonin CSV</button>
+                            <button id="importPdfAutofillButton" class="ghost-button" type="button">Ngarko PDF për Auto-Plotësim</button>
+                        </div>
+                        <p class="muted-row">Importi aktual mbështet skedarë CSV. Preview kontrollon gjithë rreshtat, ndërsa tabela poshtë shfaq vetëm 10 të parat.</p>
+                        <label>Ngarko skedarin CSV
+                            <input id="importFileInput" class="text-input" type="file" accept=".csv">
+                        </label>
+                        <div id="importFileMeta" class="muted-row"></div>
+                        <div id="importPreviewSummary" class="feedback-banner hidden"></div>
+                    <div id="importPreviewTable" class="table-wrap"></div>
+                    <label class="checkbox-row"><input id="importNotifyCheckbox" type="checkbox"> Dergo njoftim email per projektet e reja</label>
+                    <div class="form-actions">
+                        <button id="previewImportButton" class="secondary-button" type="button">Parashiko Importin</button>
+                        <button id="confirmImportButton" class="secondary-button" type="button" disabled>Konfirmo Importin</button>
+                    </div>
+                    <div id="importLogsList" class="stack-list"></div>
+                    <div id="pdfExtractionHistory" class="stack-list"></div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <button id="aiChatToggleButton" class="ai-chat-toggle" type="button">Asistenti AI</button>
+    <aside id="aiChatDrawer" class="ai-chat-drawer hidden">
+        <div class="list-card-header">
+            <div>
+                <span class="section-kicker">Asistenti Innovation4Albania</span>
+                <h2>Asistenti AI</h2>
+            </div>
+            <button id="aiChatCloseButton" class="ghost-button" type="button">Mbyll</button>
+        </div>
+        <div id="aiChatMessages" class="ai-chat-messages"></div>
+        <div id="aiChatSuggestions" class="ai-chat-suggestions"></div>
+        <div class="ai-chat-input-row">
+            <input id="aiChatInput" class="text-input" type="text" placeholder="Pyesni diçka...">
+            <button id="aiChatSendButton" class="secondary-button" type="button">Dërgo</button>
+        </div>
+    </aside>
+
+    <script src="/site.js?v=20260404b"></script>
+    <script src="/dashboard.js?v=20260404c"></script>
+</body>
+</html>
+

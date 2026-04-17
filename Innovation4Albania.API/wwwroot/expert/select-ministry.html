@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Innovation4Albania | Verifikimi i Ministrise</title>
+    <link rel="stylesheet" href="/styles.css?v=20260404a">
+</head>
+<body data-page="expert-access">
+    <main class="access-shell">
+        <section class="access-card" id="expertAccessCard">
+            <div class="access-brand">
+                <span class="brand-mark">I4A</span>
+                <div>
+                    <strong>Innovation4Albania</strong>
+                    <span data-i18n="expertAccess.platformSubtitle">Platforma e Menaxhimit te Projekteve</span>
+                </div>
+            </div>
+
+            <div class="panel-heading">
+                <span class="section-kicker" data-i18n="expertAccess.secureAccess">Akses i siguruar</span>
+                <h1 class="access-title" data-i18n="expertAccess.title">Zgjidhni Ministrine dhe Futni Kodin e Aksesit</h1>
+                <p data-i18n="expertAccess.subtitle">Ju duhet te verifikoheni para se te vazhdoni</p>
+            </div>
+
+            <div id="expertAccessFeedback" class="feedback-banner hidden"></div>
+
+            <form id="expertAccessForm" class="form-card access-form">
+                <input id="expertMinistryId" type="hidden">
+
+                <label>
+                    <span data-i18n="expertAccess.yourMinistry">Ministria juaj</span>
+                    <input id="expertMinistrySearch" class="text-input" type="text" list="ministriesDatalist" placeholder="Zgjidhni ministrine..." data-i18n-placeholder="expertAccess.chooseMinistry" autocomplete="off" required>
+                    <datalist id="ministriesDatalist"></datalist>
+                </label>
+
+                <label>
+                    <span data-i18n="expertAccess.accessCode">Kodi i aksesit</span>
+                    <div class="secure-input-wrap">
+                        <span class="secure-input-icon" data-i18n="expertAccess.locked">Mbyllur</span>
+                        <input id="expertAccessCode" class="text-input secure-input" type="password" placeholder="Futni kodin sekret te ministrise" data-i18n-placeholder="expertAccess.secretCode" required>
+                        <button id="toggleAccessCodeButton" class="ghost-button toggle-visibility" type="button" data-i18n="expertAccess.show">Shfaq</button>
+                    </div>
+                </label>
+
+                <div id="lockoutNotice" class="lockout-notice hidden"></div>
+
+                <div class="form-actions">
+                    <button id="expertAccessSubmit" class="secondary-button access-submit" type="submit">
+                        <span class="button-label" data-i18n="expertAccess.enterDashboard">Hyr ne Dashboard -&gt;</span>
+                        <span class="button-spinner hidden"></span>
+                    </button>
+                </div>
+            </form>
+
+            <details class="demo-codes-card">
+                <summary data-i18n="expertAccess.demoCodes">Demo kodet</summary>
+                <div id="demoCodesList" class="demo-codes-list"></div>
+            </details>
+        </section>
+    </main>
+
+    <script src="/site.js?v=20260404a"></script>
+    <script src="/expert-access.js?v=20260404a"></script>
+</body>
+</html>

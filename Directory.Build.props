@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('Innovation4Albania'))">
+    <Innovation4AlbaniaBuildRoot>$([System.Environment]::GetFolderPath(System.Environment+SpecialFolder.LocalApplicationData))\Innovation4Albania.Lab\</Innovation4AlbaniaBuildRoot>
+    <BaseOutputPath>$(Innovation4AlbaniaBuildRoot)bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(Innovation4AlbaniaBuildRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>

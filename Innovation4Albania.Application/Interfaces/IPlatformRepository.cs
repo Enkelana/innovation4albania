@@ -1,0 +1,65 @@
+using Innovation4Albania.Domain.Entities;
+
+namespace Innovation4Albania.Application.Interfaces;
+
+public interface IPlatformRepository
+{
+    IReadOnlyList<PlatformUser> GetUsers();
+    PlatformUser? GetUserById(string userId);
+    IReadOnlyList<Ministry> GetMinistries();
+    bool VerifyMinistryAccessCode(string ministryId, string accessCode);
+    string? GetDemoAccessCode(string ministryId);
+    IReadOnlyList<Expert> GetExperts();
+    IReadOnlyList<InnovationProject> GetProjects();
+    IReadOnlyList<WorkflowStep> GetWorkflowSteps();
+    IReadOnlyList<ProjectDocument> GetDocuments();
+    IReadOnlyList<ProjectNote> GetNotes();
+    IReadOnlyList<ProjectMeeting> GetMeetings();
+    IReadOnlyList<ProjectTask> GetTasks();
+    IReadOnlyList<TaskComment> GetTaskComments();
+    IReadOnlyList<ProjectMilestone> GetProjectMilestones();
+    IReadOnlyList<ProjectPhoto> GetProjectPhotos();
+    IReadOnlyList<OkrObjective> GetOkrs();
+    IReadOnlyList<KeyResult> GetKeyResults();
+    IReadOnlyList<ProjectOkrLink> GetProjectOkrLinks();
+    IReadOnlyList<ApprovalEntry> GetApprovalEntries();
+    IReadOnlyList<PlatformNotification> GetNotifications();
+    IReadOnlyList<ImportLog> GetImportLogs();
+    IReadOnlyList<PlatformAlert> GetAlerts();
+    IReadOnlyList<HistoryLog> GetHistoryLogs();
+    AlertSettings GetAlertSettings();
+    SyncStatus GetSyncStatus();
+    MonthlyReportSettings GetMonthlyReportSettings();
+    InnovationProject SaveProject(InnovationProject project, string actorName, bool isNew);
+    Expert SaveExpert(Expert expert, string actorName, bool isNew);
+    bool DeleteExpert(string expertId, string actorName);
+    bool UpdateMinistryAccessCode(string ministryId, string accessCode, string actorName);
+    ProjectDocument SaveDocument(ProjectDocument document, string actorName, bool isNew);
+    bool DeleteDocument(string documentId, string actorName);
+    WorkflowStep SaveWorkflowStep(WorkflowStep step, string actorName, bool isNew);
+    bool DeleteWorkflowStep(string workflowStepId, string actorName);
+    ProjectNote SaveNote(ProjectNote note, string actorName, bool isNew);
+    bool DeleteNote(string noteId, string actorName);
+    ProjectMeeting SaveMeeting(ProjectMeeting meeting, string actorName, bool isNew);
+    bool CompleteMeeting(string meetingId, string notes, string? recordingUrl, string actorName);
+    bool DeleteMeeting(string meetingId, string actorName);
+    ProjectTask SaveTask(ProjectTask task, string actorName, bool isNew);
+    bool DeleteTask(string taskId, string actorName);
+    TaskComment SaveTaskComment(TaskComment comment, string actorName, bool isNew);
+    bool DeleteTaskComment(string taskCommentId, string actorName);
+    ProjectMilestone SaveProjectMilestone(ProjectMilestone milestone, string actorName, bool isNew);
+    ProjectPhoto SaveProjectPhoto(ProjectPhoto photo, string actorName, bool isNew);
+    bool DeleteProjectPhoto(string photoId, string actorName);
+    OkrObjective SaveOkr(OkrObjective okr, string actorName, bool isNew);
+    KeyResult SaveKeyResult(KeyResult keyResult, string actorName, bool isNew);
+    ProjectOkrLink SaveProjectOkrLink(ProjectOkrLink link, string actorName);
+    ApprovalEntry AddApprovalEntry(ApprovalEntry entry);
+    void AddNotification(PlatformNotification notification);
+    int MarkNotificationsAsRead(string recipientId, string? notificationId = null);
+    void ClearReadNotifications(string recipientId);
+    ImportLog AddImportLog(ImportLog log);
+    AlertSettings UpdateAlertSettings(AlertSettings settings, string actorName);
+    SyncStatus RefreshSyncStatus(string actorName);
+    MonthlyReportSettings UpdateMonthlyReportSettings(bool isEnabled, string actorName);
+    MonthlyReportSettings RegisterMonthlyReportDispatch(DateTime sentUtc, int recipientCount, string actorName);
+}
