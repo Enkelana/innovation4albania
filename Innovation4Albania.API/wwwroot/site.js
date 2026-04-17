@@ -652,7 +652,7 @@ async function bootLandingPage() {
     if (heroMetrics) {
         heroMetrics.innerHTML = `
             <article>
-                <strong>16</strong>
+                <strong>12</strong>
                 <span>${getLanguage() === "en" ? "ministries in one national view" : "ministri ne nje pamje kombetare"}</span>
             </article>
             <article>
