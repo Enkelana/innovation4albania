@@ -3929,12 +3929,12 @@ function renderWorkspace() {
     const roleCopy = {
         PrimeMinister: {
             title: pickText("Paneli strategjik i Kryeministrit", "Prime Minister Strategic Dashboard"),
-            subtitle: pickText("Pamje e pergjithshme e 16 ministrive per vendimmarrje, raportim dhe monitorim risku.", "A national view across all 16 ministries for decisions, reporting and risk monitoring."),
+        subtitle: pickText("Pamje e pergjithshme e 12 ministrive per vendimmarrje, raportim dhe monitorim risku.", "A national view across all 12 ministries for decisions, reporting and risk monitoring."),
             summary: pickText("Pamje kombetare vetem ne lexim per te gjitha ministrite.", "National read-only visibility across all ministries.")
         },
         Minister: {
             title: pickText("Paneli strategjik i Ministres", "Minister Strategic Dashboard"),
-            subtitle: pickText("Pamje e pergjithshme e 16 ministrive per vendimmarrje, raportim dhe monitorim risku.", "A national view across all 16 ministries for decisions, reporting and risk monitoring."),
+        subtitle: pickText("Pamje e pergjithshme e 12 ministrive per vendimmarrje, raportim dhe monitorim risku.", "A national view across all 12 ministries for decisions, reporting and risk monitoring."),
             summary: pickText("Pamje kombetare vetem ne lexim per te gjitha ministrite.", "National read-only visibility across all ministries.")
         },
         Director: {

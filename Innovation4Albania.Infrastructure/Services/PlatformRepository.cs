@@ -48,11 +48,7 @@ public sealed class PlatformRepository : IPlatformRepository
             Ministry("MIN-09", "Ministria e Infrastruktures dhe Energjise", "MIE", "Ina Lulo", "mie@innovation4albania.al", "MIN009"),
             Ministry("MIN-10", "Ministria e Turizmit dhe Mjedisit", "MTM", "Klodiana Rruci", "mtm@innovation4albania.al", "MIN010"),
             Ministry("MIN-11", "Ministria e Drejtesise", "MD", "Sokol Mema", "md@innovation4albania.al", "MIN011"),
-            Ministry("MIN-12", "Ministria e Drejtimit Vendor", "MDV", "Gerald Hoxha", "mdv@innovation4albania.al", "MIN012"),
-            Ministry("MIN-13", "Ministria e Sipermarrjes Shteterore", "MSS", "Irena Kola", "mss@innovation4albania.al", "MIN013"),
-            Ministry("MIN-14", "Ministria e Digjitalizimit", "MDIG", "Anxhela Kika", "mdig@innovation4albania.al", "MIN014"),
-            Ministry("MIN-15", "Ministria e Transporteve Publike", "MTP", "Bledar Konomi", "mtp@innovation4albania.al", "MIN015"),
-            Ministry("MIN-16", "Ministria e Administrates Publike", "MAP", "Enida Toto", "map@innovation4albania.al", "MIN016")
+            Ministry("MIN-12", "Ministria e Drejtimit Vendor", "MDV", "Gerald Hoxha", "mdv@innovation4albania.al", "MIN012")
         ];
 
         demoAccessCodes = ministries.ToDictionary(
@@ -65,8 +61,8 @@ public sealed class PlatformRepository : IPlatformRepository
             new PlatformUser { Id = "prime-minister", FullName = "Kryeministri", Email = "kryeministri@innovation4albania.al", Role = UserRole.PrimeMinister, RoleLabel = "Pamje strategjike kombetare" },
             new PlatformUser { Id = "minister", FullName = "Ministrja e Shtetit", Email = "minister@innovation4albania.al", Role = UserRole.Minister, RoleLabel = "Pamje strategjike kombetare" },
             new PlatformUser { Id = "director", FullName = "Drejtori i Pergjithshem i Inovacionit Publik", Email = "director@innovation4albania.al", Role = UserRole.Director, RoleLabel = "Administrim i plote i platformes" },
-            new PlatformUser { Id = "nuklis-director", FullName = "Drejtori i NUKLIS-it", Email = "nuklis.director@innovation4albania.al", Role = UserRole.NucleusDirector, RoleLabel = "Administrim drejtorial per ministrine e caktuar", MinistryId = "MIN-14" },
-            new PlatformUser { Id = "expert-mdig", FullName = "Elira Hasa", Email = "elira.hasa@innovation4albania.al", Role = UserRole.Expert, RoleLabel = "Eksperte e inovacionit", MinistryId = "MIN-14" }
+            new PlatformUser { Id = "nuklis-director", FullName = "Drejtori i Nuklit", Email = "nuklis.director@innovation4albania.al", Role = UserRole.NucleusDirector, RoleLabel = "Administrim drejtorial per ministrine e caktuar", MinistryId = "MIN-05" },
+            new PlatformUser { Id = "expert-mdig", FullName = "Elira Hasa", Email = "elira.hasa@innovation4albania.al", Role = UserRole.Expert, RoleLabel = "Eksperte e inovacionit", MinistryId = "MIN-05" }
         ];
 
         experts = ministries.Select((ministry, index) => new Expert
@@ -928,7 +924,7 @@ public sealed class PlatformRepository : IPlatformRepository
                 Id = $"NOTE-{firstProject.Id}",
                 ProjectId = firstProject.Id,
                 AuthorName = firstProject.OwnerName,
-                AuthorUserId = i == 13 ? "expert-mdig" : $"expert-{i:00}",
+                AuthorUserId = ministry.Id == "MIN-05" ? "expert-mdig" : $"expert-{i:00}",
                 Content = "Nevojitet koordinim me ekipin e ministrise per afatin e fazes se ardhshme.",
                 IsPrivate = false,
                 CreatedUtc = DateTime.UtcNow.AddHours(-(i + 1))
@@ -945,7 +941,7 @@ public sealed class PlatformRepository : IPlatformRepository
                 ScheduledAtUtc = DateTime.UtcNow.AddDays((i % 5) + 1).AddHours(9 + (i % 3)),
                 DurationMinutes = 60,
                 CreatedByUserId = "director",
-                AttendeeUserIds = i == 13 ? ["director", "expert-mdig"] : ["director"],
+                AttendeeUserIds = ministry.Id == "MIN-05" ? ["director", "expert-mdig"] : ["director"],
                 Status = "scheduled",
                 CreatedUtc = DateTime.UtcNow.AddDays(-3)
             });
@@ -958,7 +954,7 @@ public sealed class PlatformRepository : IPlatformRepository
                 Description = "Permbledhje e progresit, riskut dhe nevojave per vendimmarrje.",
                 Status = i % 4 == 0 ? "done" : i % 4 == 1 ? "review" : i % 4 == 2 ? "in_progress" : "todo",
                 Priority = i % 5 == 0 ? "urgent" : i % 2 == 0 ? "high" : "medium",
-                AssigneeUserId = i == 13 ? "expert-mdig" : "director",
+                AssigneeUserId = ministry.Id == "MIN-05" ? "expert-mdig" : "director",
                 Deadline = firstProject.DueDate.AddDays(-5),
                 EstimatedHours = 6,
                 ActualHours = i % 4 == 0 ? 5.5m : 0,
@@ -1047,7 +1043,7 @@ public sealed class PlatformRepository : IPlatformRepository
                 StageFrom = "draft",
                 StageTo = ApprovalStageShqip(firstProject.ApprovalStage),
                 Action = firstProject.ApprovalStage == ApprovalStage.UnderReview ? "submit" : "activate",
-                ActorId = i == 13 ? "expert-mdig" : $"seed-user-{i:00}",
+                ActorId = ministry.Id == "MIN-05" ? "expert-mdig" : $"seed-user-{i:00}",
                 ActorName = firstProject.OwnerName,
                 Comment = firstProject.RejectionReason,
                 DigitalSignature = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{firstProject.OwnerName}:{firstProject.Id}:{DateTime.UtcNow.Ticks}")),
@@ -1118,7 +1114,7 @@ public sealed class PlatformRepository : IPlatformRepository
             Type = "project_watch",
             Title = "Projektet e ministrise jane gati per ndjekje",
             Message = "Dashboard-i i drejtorise eshte gati me projektet e ministrise tuaj.",
-            ProjectId = projects.FirstOrDefault(item => item.MinistryId == "MIN-14")?.Id,
+            ProjectId = projects.FirstOrDefault(item => item.MinistryId == "MIN-05")?.Id,
             IsRead = false,
             CreatedUtc = DateTime.UtcNow.AddMinutes(-18)
         });

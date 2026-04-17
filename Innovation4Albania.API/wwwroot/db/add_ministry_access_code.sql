@@ -1,1 +1,1 @@
-ALTER TABLE ministries ADD COLUMN access_code TEXT;
+ALTER TABLE ministries ADD access_code TEXT;

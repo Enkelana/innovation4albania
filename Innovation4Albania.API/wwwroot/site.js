@@ -56,9 +56,9 @@ const translations = {
             platformName: "Platforma Kombetare e Inovacionit Publik",
             kicker: "Inovacioni publik shqiptar",
             title: "Inovacioni Publik Shqiptar — i Monitoruar, i Matur, i Suksesshem",
-            subtitle: "Platforma kombetare per menaxhimin e projekteve te inovacionit ne 16 ministrite e Republikes se Shqiperise.",
+            subtitle: "Platforma kombetare per menaxhimin e projekteve te inovacionit ne 12 ministrite e Republikes se Shqiperise.",
             summary1Kicker: "Monitorim Kombetar",
-            summary1Title: "16 ministri ne nje pamje te vetme",
+            summary1Title: "12 ministri ne nje pamje te vetme",
             summary1Text: "Vendimmarrje me KPI, afate, progres dhe risk ne nje panel te unifikuar.",
             summary2Kicker: "Pune Operative",
             summary2Title: "Workflow, dokumente dhe raportim",
@@ -92,7 +92,7 @@ const translations = {
             platformOffer: "Cfare ofron platforma",
             realtimeTitle: "Monitorim ne Kohe Reale",
             realtimeText: "Gjurmoni KPI-te dhe afatet e cdo projekti",
-            ministriesTitle: "16 Ministri te Integruara",
+            ministriesTitle: "12 Ministri te Integruara",
             ministriesText: "Nje platforme per gjithe qeverine shqiptare",
             autoAlertsTitle: "Alerts Automatike",
             autoAlertsText: "Njoftohuni menjehere kur projektet jane ne risk",
@@ -109,7 +109,7 @@ const translations = {
         },
         login: {
             title: "Platforma e Menaxhimit te Projekteve",
-            subtitle: "Platforme e centralizuar per monitorimin e projekteve te inovacionit publik ne 16 ministrite e Republikes se Shqiperise.",
+            subtitle: "Platforme e centralizuar per monitorimin e projekteve te inovacionit publik ne 12 ministrite e Republikes se Shqiperise.",
             mvpProjects: "Projekte MVP",
             demoRoles: "Rolet demo",
             demoAccess: "Hyrje demo",
@@ -119,7 +119,7 @@ const translations = {
             demoCredentials: "Kredencialet demo",
             strategicPanel: "Panel strategjik dhe eksporte",
             directorOps: "CRUD, audit, alerts, eksporte",
-            demoAccessCode: "Kodi demo i aksesit: MIN014",
+            demoAccessCode: "Kodi demo i aksesit: MIN005",
             dataSources: "Burimet e te dhenave",
             dataSourcesText: "Struktura eshte pergatitur qe me vone te lidhet me Google Sheets, Excel dhe API sync pa ndryshuar UI-ne baze."
         },
@@ -262,9 +262,9 @@ const translations = {
             platformName: "National Public Innovation Platform",
             kicker: "Albanian public innovation",
             title: "Albanian Public Innovation — Monitored, Measured, Successful",
-            subtitle: "The national platform for managing innovation projects across the 16 ministries of the Republic of Albania.",
+            subtitle: "The national platform for managing innovation projects across the 12 ministries of the Republic of Albania.",
             summary1Kicker: "National Monitoring",
-            summary1Title: "16 ministries in a single view",
+            summary1Title: "12 ministries in a single view",
             summary1Text: "Decision-making with KPI, deadlines, progress and risk in one unified panel.",
             summary2Kicker: "Operational Work",
             summary2Title: "Workflow, documents and reporting",
@@ -298,7 +298,7 @@ const translations = {
             platformOffer: "What the platform offers",
             realtimeTitle: "Real-Time Monitoring",
             realtimeText: "Track KPI and deadlines for every project",
-            ministriesTitle: "16 Integrated Ministries",
+            ministriesTitle: "12 Integrated Ministries",
             ministriesText: "One platform for the entire Albanian government",
             autoAlertsTitle: "Automatic Alerts",
             autoAlertsText: "Be notified immediately when projects are at risk",
@@ -315,7 +315,7 @@ const translations = {
         },
         login: {
             title: "Project Management Platform",
-            subtitle: "A centralized platform for monitoring public innovation projects across the 16 ministries of the Republic of Albania.",
+            subtitle: "A centralized platform for monitoring public innovation projects across the 12 ministries of the Republic of Albania.",
             mvpProjects: "MVP Projects",
             demoRoles: "Demo roles",
             demoAccess: "Demo access",
@@ -325,7 +325,7 @@ const translations = {
             demoCredentials: "Demo credentials",
             strategicPanel: "Strategic panel and exports",
             directorOps: "CRUD, audit, alerts, exports",
-            demoAccessCode: "Demo access code: MIN014",
+            demoAccessCode: "Demo access code: MIN005",
             dataSources: "Data sources",
             dataSourcesText: "The structure is prepared to connect later with Google Sheets, Excel and API sync without changing the core UI."
         },
@@ -477,8 +477,8 @@ function applyLanguageMetadata() {
         const description = document.querySelector('meta[name="description"]');
         if (description) {
             description.setAttribute("content", lang === "en"
-                ? "Innovation4Albania - Transparency of public innovation projects across the 16 ministries of the Republic of Albania."
-                : "Innovation4Albania - Transparenca e projekteve publike te inovacionit ne 16 ministrite e Republikes se Shqiperise.");
+        ? "Innovation4Albania - Transparency of public innovation projects across the 12 ministries of the Republic of Albania."
+        : "Innovation4Albania - Transparenca e projekteve publike te inovacionit ne 12 ministrite e Republikes se Shqiperise.");
         }
 
         const ogTitle = document.querySelector('meta[property="og:title"]');
