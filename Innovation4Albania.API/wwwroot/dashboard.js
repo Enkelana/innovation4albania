@@ -16,12 +16,12 @@ const muajt2026 = [
     "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"
 ];
 
-const perkthimStatusi = { Active: "Aktiv", InProcess: "Ne proces", Completed: "Perfunduar", Cancelled: "Anuluar" };
+const perkthimStatusi = { Active: "Aktiv", InProcess: "Në proces", Completed: "Përfunduar", Cancelled: "Anuluar" };
 const perkthimRisku = { High: "Risk i larte", Medium: "Risk mesatar", Low: "Risk i ulet" };
-const perkthimGjendjeje = { "On track": "Ne rruge te mbare", Watchlist: "Ne vezhgim", "Needs attention": "Kerkon vemendje", "No data": "Pa te dhena" };
-const perkthimStatusiWorkflow = { Completed: "Perfunduar", "In progress": "Ne proces", "Pending review": "Ne pritje shqyrtimi", Pending: "Ne pritje" };
-const perkthimStatusiDetyrave = { todo: "Per t'u bere", in_progress: "Ne progres", review: "Ne shqyrtim", done: "Perfunduar" };
-const perkthimPrioritetitDetyrave = { low: "E ulet", medium: "Mesatare", high: "E larte", urgent: "Urgjente" };
+const perkthimGjendjeje = { "On track": "Në rrugë të mbarë", Watchlist: "Në vëzhgim", "Needs attention": "Kërkon vëmendje", "No data": "Pa të dhëna" };
+const perkthimStatusiWorkflow = { Completed: "Përfunduar", "In progress": "Në proces", "Pending review": "Në pritje shqyrtimi", Pending: "Në pritje" };
+const perkthimStatusiDetyrave = { todo: "Për t'u bërë", in_progress: "Në progres", review: "Në shqyrtim", done: "Përfunduar" };
+const perkthimPrioritetitDetyrave = { low: "E ulët", medium: "Mesatare", high: "E lartë", urgent: "Urgjente" };
 
 function statusiShqip(vlera) { return perkthimStatusi[vlera] ?? vlera; }
 function riskuShqip(vlera) { return perkthimRisku[vlera] ?? vlera; }
@@ -794,20 +794,20 @@ function updateViewUrl(view, extra = {}) {
 
 function exportViewLabel(view) {
     const labels = {
-        overview: "Permbledhje",
+        overview: "Përmbledhje",
         projects: "Projektet",
-        charts: "Grafiket",
+        charts: "Grafikët",
         "project-detail": "Detajet e projektit",
-        ministries: "Ministrite",
-        experts: "Anetaret",
+        ministries: "Ministritë",
+        experts: "Anëtarët",
         documents: "Dokumentet",
-        workflow: "Rrjedha e punes",
+        workflow: "Rrjedha e punës",
         okrs: "OKR",
         calendar: "Kalendar",
         notifications: "Njoftimet",
         import: "Importo",
         alerts: "Alertet",
-        sync: "Cilesimet",
+        sync: "Cilësimet",
         logs: "Historiku"
     };
     return labels[view] ?? "Paneli";
@@ -3954,21 +3954,21 @@ function renderWorkspace() {
         PrimeMinister: {
             title: pickText("Paneli strategjik i Kryeministrit", "Prime Minister Strategic Dashboard"),
         subtitle: pickText("Pamje e pergjithshme e 12 ministrive per vendimmarrje, raportim dhe monitorim risku.", "A national view across all 12 ministries for decisions, reporting and risk monitoring."),
-            summary: pickText("Pamje kombetare vetem ne lexim per te gjitha ministrite.", "National read-only visibility across all ministries.")
+        summary: pickText("Pamje kombëtare vetëm në lexim për të gjitha ministritë.", "National read-only visibility across all ministries.")
         },
         Minister: {
             title: pickText("Paneli strategjik i Ministres", "Minister Strategic Dashboard"),
         subtitle: pickText("Pamje e pergjithshme e 12 ministrive per vendimmarrje, raportim dhe monitorim risku.", "A national view across all 12 ministries for decisions, reporting and risk monitoring."),
-            summary: pickText("Pamje kombetare vetem ne lexim per te gjitha ministrite.", "National read-only visibility across all ministries.")
+        summary: pickText("Pamje kombëtare vetëm në lexim për të gjitha ministritë.", "National read-only visibility across all ministries.")
         },
         Director: {
-            title: pickText("Paneli operacional i Drejtorit te Pergjithshem", "General Director Operational Dashboard"),
+            title: pickText("Paneli operacional i Drejtorit të Përgjithshëm", "General Director Operational Dashboard"),
             subtitle: pickText("Kontroll i plote mbi projektet, ekspertet, rrjedhen e punes, dokumentet, alertet dhe gjurmen e auditimit.", "Full control over projects, experts, workflows, documents, alerts and audit trail."),
             summary: pickText("Kontroll i plote administrativ dhe operacional.", "Full administrative and operational control.")
         },
         NucleusDirector: {
-            title: pickText("Paneli operacional i Drejtorit te NUKLIS-it", "NUKLIS Director Operational Dashboard"),
-            subtitle: pickText("Pamje drejtoriale per ministrine tende, me te njejtat mjete operacionale si drejtori i pergjithshem.", "A director-level view for your ministry, with the same operational tools as the general director."),
+            title: pickText("Paneli operacional i Drejtorit të Nuklit", "Nucleus Director Operational Dashboard"),
+            subtitle: pickText("Pamje drejtoriale për ministrinë tënde, me të njëjtat mjete operacionale si drejtori i përgjithshëm.", "A director-level view for your ministry, with the same operational tools as the general director."),
             summary: pickText("Kontroll operacional i kufizuar vetem per ministrine e caktuar.", "Operational control limited to the assigned ministry.")
         },
         Expert: {
@@ -3980,7 +3980,7 @@ function renderWorkspace() {
 
     const copy = roleCopy[currentUser.role];
     const titujPamjesh = {
-        overview: [pickText("Permbledhje strategjike", "Strategic Overview"), copy.subtitle],
+        overview: [pickText("Përmbledhje strategjike", "Strategic Overview"), copy.subtitle],
         projects: [pickText("Pamja e projekteve", "Projects View"), pickText("Menaxho, filtro dhe monitoro projektet sipas rolit.", "Manage, filter and monitor projects based on role.")],
         charts: [pickText("Pamja e grafikeve", "Charts View"), pickText("Shiko grafike dhe tregues per progresin e projekteve.", "Review charts and indicators for project progress.")],
         okrs: [pickText("Objektivat OKR", "OKR Objectives"), pickText("Menaxho objektivat, rezultatet kyce dhe lidhjet me projektet.", "Manage objectives, key results and links to projects.")],
@@ -4003,7 +4003,7 @@ function renderWorkspace() {
 
     const statsCards = isMinisterLike(currentUser.role)
         ? [
-            metricCard("Ministri ne monitorim", dashboard.overview.activeMinistries, "Pamje kombetare ne nje panel"),
+            metricCard("Ministri në monitorim", dashboard.overview.activeMinistries, "Pamje kombëtare në një panel"),
             metricCard("Portofoli aktiv", dashboard.overview.totalProjects, "Projektet ne qarkullim kombetar"),
             metricCard("KPI mesatar kombetar", `${dashboard.overview.averageKpi}%`, "Niveli mesatar i performances"),
             metricCard("Perfunduara kete vit", ministerCompletedThisYear, "Projektet e mbyllura me sukses"),
@@ -4020,7 +4020,7 @@ function renderWorkspace() {
                 metricCard("Norma e riskut", `${dashboard.overview.riskRate}%`, "Pesha e projekteve ne risk ndaj portofolit aktiv")
             ]
             : [
-                metricCard("Ministri ne monitorim", dashboard.overview.activeMinistries, "Pamje kombetare ne nje panel"),
+            metricCard("Ministri në monitorim", dashboard.overview.activeMinistries, "Pamje kombëtare në një panel"),
                 metricCard("Portofoli aktiv", dashboard.overview.totalProjects, "Projektet ne qarkullim kombetar"),
                 metricCard("KPI mesatar kombetar", `${dashboard.overview.averageKpi}%`, "Niveli mesatar i performances"),
                 metricCard("Perfunduara kete vit", dashboard.overview.completedProjects, "Projektet e mbyllura me sukses"),
