@@ -210,7 +210,7 @@ const translations = {
             enterDashboard: "Hyr ne Dashboard ->",
             demoCodes: "Demo kodet"
         },
-        roles: { PrimeMinister: "Kryeministri", Minister: "Ministrja", Director: "Drejtori i Pergjithshem", NucleusDirector: "Drejtori i NUKLIS-it", Expert: "Eksperti" }
+        roles: { PrimeMinister: "Kryeministri", Minister: "Ministrja", Director: "Drejtori i Pergjithshem", NucleusDirector: "Drejtori i NUKLIT", Expert: "Eksperti" }
     },
     en: {
         landingCta: "Enter Platform ->",

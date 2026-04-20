@@ -938,6 +938,13 @@ p { color: var(--muted); line-height: 1.6; }
 }
 .app-main { padding: 20px 0 28px; }
 
+body[data-page="dashboard"]:not(.dashboard-ready) .content-stack,
+body[data-page="dashboard"]:not(.dashboard-ready) .sidebar-nav,
+body[data-page="dashboard"]:not(.dashboard-ready) #feedbackBanner,
+body[data-page="dashboard"]:not(.dashboard-ready) #globalAlertBanner {
+    display: none !important;
+}
+
 .page-header, .list-card-header, .alert-header, .project-head, .row-side, .header-actions {
     display: flex;
     align-items: center;

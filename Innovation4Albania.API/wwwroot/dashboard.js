@@ -3719,6 +3719,30 @@ function konfiguroNavigimin(role) {
         link.style.display = teLejuara.has(view) ? "" : "none";
         link.classList.toggle("active", view === aktive);
     });
+
+    document.querySelectorAll(".sidebar-nav .nav-link").forEach((link) => {
+        if (link.dataset.boundNavigation === "true") {
+            return;
+        }
+
+        link.dataset.boundNavigation = "true";
+        link.addEventListener("click", (event) => {
+            const targetView = link.dataset.view;
+            if (!targetView || !teLejuara.has(targetView)) {
+                return;
+            }
+
+            document.body.classList.remove("dashboard-ready");
+
+            if (rrugaPamjes(role, targetView).startsWith(rrugaBazePanelit(role))) {
+                event.preventDefault();
+                updateViewUrl(targetView);
+                konfiguroNavigimin(role);
+                aplikoPamjenAktive(role);
+                document.body.classList.add("dashboard-ready");
+            }
+        });
+    });
 }
 
 function aplikoPamjenAktive(role) {
@@ -4071,6 +4095,7 @@ function renderWorkspace() {
     applyRoleAccess();
     konfiguroNavigimin(currentUser.role);
     aplikoPamjenAktive(currentUser.role);
+    document.body.classList.add("dashboard-ready");
     updateChromeControls();
     const aiSettings = getAiAlertSettings();
     const aiEnabled = document.getElementById("aiAlertsEnabled");
@@ -4229,6 +4254,7 @@ async function loadWorkspace(reloadDetail = true) {
         return;
     }
 
+    document.body.classList.remove("dashboard-ready");
     workspaceState = await fetchJson(`/api/workspace?userId=${encodeURIComponent(currentUserId)}`);
     const path = window.location.pathname.toLowerCase();
     const verification = getExpertVerification(currentUserId);
