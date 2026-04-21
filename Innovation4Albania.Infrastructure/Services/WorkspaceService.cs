@@ -1,13 +1,17 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using Innovation4Albania.Application.DTOs.Workspace;
+using Innovation4Albania.Application.DTOs.Reporting;
 using Innovation4Albania.Application.Interfaces;
 using Innovation4Albania.Domain.Entities;
 using Innovation4Albania.Domain.Enums;
 
 namespace Innovation4Albania.Infrastructure.Services;
 
-public sealed class WorkspaceService(IPlatformRepository repository, IDashboardService dashboardService) : IWorkspaceService
+public sealed class WorkspaceService(
+    IPlatformRepository repository,
+    IDashboardService dashboardService,
+    IKpiReportingService kpiReportingService) : IWorkspaceService
 {
     public WorkspaceBootstrapDto? GetWorkspace(string userId)
     {
@@ -18,7 +22,9 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             return null;
         }
 
-        var visibleProjects = FilterProjects(user).ToList();
+        var visibleProjects = FilterProjects(user)
+            .Select(BuildDerivedProject)
+            .ToList();
         var visibleProjectIds = visibleProjects.Select(project => project.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var visibleMinistries = FilterMinistries(user).ToList();
         var ministryNames = visibleMinistries.ToDictionary(item => item.Id, item => item.Name, StringComparer.OrdinalIgnoreCase);
@@ -165,7 +171,10 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             return null;
         }
 
-        var project = FilterProjects(user).FirstOrDefault(item => item.Id == projectId);
+        var project = FilterProjects(user)
+            .Where(item => item.Id == projectId)
+            .Select(BuildDerivedProject)
+            .FirstOrDefault();
         if (project is null)
         {
             return null;
@@ -261,6 +270,88 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             approvals);
     }
 
+    public PortfolioKpiSnapshotDto? GetPortfolioKpiSnapshot(string userId)
+    {
+        var actor = repository.GetUserById(userId);
+        if (actor is null)
+        {
+            return null;
+        }
+
+        var projects = FilterProjects(actor).Select(BuildDerivedProject).ToList();
+        var visibleMinistries = FilterMinistries(actor).Select(item => item.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var experts = repository.GetExperts().Count(item => visibleMinistries.Contains(item.MinistryId));
+        var tasks = repository.GetTasks().Count(item => projects.Any(project => project.Id == item.ProjectId));
+        var milestones = repository.GetProjectMilestones().Where(item => projects.Any(project => project.Id == item.ProjectId)).ToList();
+
+        return kpiReportingService.BuildKpiSnapshot(projects, experts, tasks, milestones);
+    }
+
+    public PortfolioPeriodicReportDto? GetPortfolioDailyReport(string userId)
+    {
+        var actor = repository.GetUserById(userId);
+        if (actor is null || !IsDirectorLike(actor))
+        {
+            return null;
+        }
+
+        var projects = FilterProjects(actor).Select(BuildDerivedProject).ToList();
+        var visibleMinistryIds = FilterMinistries(actor).Select(item => item.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var experts = repository.GetExperts().Count(item => visibleMinistryIds.Contains(item.MinistryId));
+        var tasks = repository.GetTasks().Count(item => projects.Any(project => project.Id == item.ProjectId));
+        var milestones = repository.GetProjectMilestones().Where(item => projects.Any(project => project.Id == item.ProjectId)).ToList();
+
+        return kpiReportingService.BuildDailyReport(
+            DateTime.Today.ToString("dd MMMM yyyy"),
+            projects,
+            FilterMinistries(actor).ToList(),
+            experts,
+            tasks,
+            milestones);
+    }
+
+    public PortfolioPeriodicReportDto? GetPortfolioWeeklyReport(string userId)
+    {
+        var actor = repository.GetUserById(userId);
+        if (actor is null || !IsDirectorLike(actor))
+        {
+            return null;
+        }
+
+        var projects = FilterProjects(actor).Select(BuildDerivedProject).ToList();
+        var visibleMinistryIds = FilterMinistries(actor).Select(item => item.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var experts = repository.GetExperts().Count(item => visibleMinistryIds.Contains(item.MinistryId));
+        var tasks = repository.GetTasks().Count(item => projects.Any(project => project.Id == item.ProjectId));
+        var milestones = repository.GetProjectMilestones().Where(item => projects.Any(project => project.Id == item.ProjectId)).ToList();
+        var mondayOffset = ((int)DateTime.Today.DayOfWeek + 6) % 7;
+        var weekStart = DateTime.Today.AddDays(-mondayOffset);
+        var weekEnd = weekStart.AddDays(6);
+
+        return kpiReportingService.BuildWeeklyReport(
+            $"{weekStart:dd MMM} - {weekEnd:dd MMM yyyy}",
+            projects,
+            FilterMinistries(actor).ToList(),
+            experts,
+            tasks,
+            milestones);
+    }
+
+    public PortfolioMonthlyReportDto? GetPortfolioMonthlyReport(string userId)
+    {
+        var actor = repository.GetUserById(userId);
+        if (actor is null || !IsDirectorLike(actor))
+        {
+            return null;
+        }
+
+        var previousMonth = DateTime.Today.AddMonths(-1);
+        var monthLabel = previousMonth.ToString("MMMM yyyy");
+        return kpiReportingService.BuildMonthlyReport(
+            monthLabel,
+            FilterProjects(actor).Select(BuildDerivedProject).ToList(),
+            FilterMinistries(actor).ToList());
+    }
+
     public ImportPreviewDto PreviewImport(string userId, ImportPreviewRequestDto request)
     {
         var actor = repository.GetUserById(userId);
@@ -349,6 +440,7 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             CancellationReason = action == "cancel" ? (request.Comment?.Trim() ?? "Anuluar") : project.CancellationReason,
             Progress = project.Progress
         }, actor.FullName, false);
+        RecalculateProjectMetrics(project.Id, actor.FullName);
 
         repository.AddApprovalEntry(new ApprovalEntry
         {
@@ -403,13 +495,14 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             RejectionReason = existing?.RejectionReason,
             StartDate = startDate,
             DueDate = dueDate,
-            Kpi = Math.Clamp(request.Kpi, 0, 100),
+            Kpi = existing?.Kpi ?? 0,
             OwnerName = request.OwnerName.Trim(),
-            Progress = Math.Clamp(request.Progress, 0, 100),
+            Progress = existing?.Progress ?? 0,
             CancellationReason = string.IsNullOrWhiteSpace(request.CancellationReason) ? null : request.CancellationReason.Trim()
         };
 
         repository.SaveProject(project, actor.FullName, isNew);
+        RecalculateProjectMetrics(project.Id, actor.FullName);
         return new OperationResultDto(true, isNew ? "Projekti u krijua." : "Projekti u perditesua.");
     }
 
@@ -564,6 +657,7 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             OwnerName = request.OwnerName.Trim(),
             Progress = Math.Clamp(request.Progress, 0, 100)
         }, actor.FullName, isNew);
+        RecalculateProjectMetrics(request.ProjectId, actor.FullName);
 
         Notify("director", "workflow_updated", "Workflow u perditesua", $"Workflow i projektit u perditesua.", request.ProjectId);
         return new OperationResultDto(true, isNew ? "Hapi i workflow-it u shtua." : "Hapi i workflow-it u perditesua.");
@@ -594,9 +688,13 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             return new OperationResultDto(false, "Nuk ke akses te ky hap workflow.");
         }
 
-        return repository.DeleteWorkflowStep(workflowStepId, actor.FullName)
-            ? new OperationResultDto(true, "Hapi i workflow u fshi.")
-            : new OperationResultDto(false, "Hapi i workflow nuk u gjet.");
+        if (!repository.DeleteWorkflowStep(workflowStepId, actor.FullName))
+        {
+            return new OperationResultDto(false, "Hapi i workflow nuk u gjet.");
+        }
+
+        RecalculateProjectMetrics(project.Id, actor.FullName);
+        return new OperationResultDto(true, "Hapi i workflow u fshi.");
     }
 
     public OperationResultDto AddNote(string userId, CreateProjectNoteRequestDto request)
@@ -795,6 +893,7 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             CreatedUtc = isNew ? DateTime.UtcNow : repository.GetTasks().First(item => item.Id == request.Id).CreatedUtc,
             UpdatedUtc = DateTime.UtcNow
         }, actor.FullName, isNew);
+        RecalculateProjectMetrics(request.ProjectId, actor.FullName);
 
         NotifyProjectMembers(project, "info", "Detyre e perditesuar", $"Detyrat e projektit {project.Title} u perditesuan.");
         return new OperationResultDto(true, isNew ? "Detyra u shtua." : "Detyra u perditesua.");
@@ -819,9 +918,13 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             return new OperationResultDto(false, "Nuk ke akses per ta fshire kete detyre.");
         }
 
-        return repository.DeleteTask(taskId, actor.FullName)
-            ? new OperationResultDto(true, "Detyra u fshi.")
-            : new OperationResultDto(false, "Detyra nuk u gjet.");
+        if (!repository.DeleteTask(taskId, actor.FullName))
+        {
+            return new OperationResultDto(false, "Detyra nuk u gjet.");
+        }
+
+        RecalculateProjectMetrics(task.ProjectId, actor.FullName);
+        return new OperationResultDto(true, "Detyra u fshi.");
     }
 
     public OperationResultDto SaveTaskComment(string userId, SaveTaskCommentRequestDto request)
@@ -901,7 +1004,10 @@ public sealed class WorkspaceService(IPlatformRepository repository, IDashboardS
             return new OperationResultDto(false, "Vetem drejtori mund te certifikoje piketa.");
         }
 
-        var project = repository.GetProjects().FirstOrDefault(item => item.Id == request.ProjectId);
+        var project = repository.GetProjects()
+            .Where(item => item.Id == request.ProjectId)
+            .Select(BuildDerivedProject)
+            .FirstOrDefault();
         if (project is null)
         {
             return new OperationResultDto(false, "Projekti nuk u gjet.");
@@ -950,6 +1056,7 @@ Nenshkrim dixhital: {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{actor.Id}:
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
             CreatedUtc = milestone.CreatedUtc
         }, actor.FullName, false);
+        RecalculateProjectMetrics(request.ProjectId, actor.FullName);
 
         return new OperationResultDto(true, $"Piketa {request.TargetPercent}% u certifikua.");
     }
@@ -1251,7 +1358,11 @@ Nenshkrim dixhital: {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{actor.Id}:
         var previousMonth = DateTime.Today.AddMonths(-1);
         var monthLabel = previousMonth.ToString("MMMM yyyy");
         var recipientCount = repository.GetUsers().Count(user => user.Role is UserRole.Minister or UserRole.PrimeMinister or UserRole.Director or UserRole.NucleusDirector);
-        return new MonthlyReportPreviewDto(monthLabel, BuildMonthlyReportHtml(monthLabel, repository.GetProjects().ToList()), recipientCount);
+        var report = kpiReportingService.BuildMonthlyReport(
+            monthLabel,
+            repository.GetProjects().Select(BuildDerivedProject).ToList(),
+            repository.GetMinistries().ToList());
+        return new MonthlyReportPreviewDto(monthLabel, report.Html, recipientCount);
     }
 
     public OperationResultDto UpdateMonthlyReportSettings(string userId, UpdateMonthlyReportSettingsRequestDto request)
@@ -1345,6 +1456,30 @@ Nenshkrim dixhital: {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{actor.Id}:
 
     private static bool IsMinistryScopedRole(PlatformUser user) =>
         user.Role is UserRole.Expert or UserRole.NucleusDirector;
+
+    private InnovationProject BuildDerivedProject(InnovationProject project) =>
+        ProjectMetricsCalculator.WithDerivedMetrics(
+            project,
+            repository.GetTasks().Where(item => item.ProjectId == project.Id),
+            repository.GetWorkflowSteps().Where(item => item.ProjectId == project.Id),
+            repository.GetProjectMilestones().Where(item => item.ProjectId == project.Id));
+
+    private void RecalculateProjectMetrics(string projectId, string actorName)
+    {
+        var existing = repository.GetProjects().FirstOrDefault(item => item.Id == projectId);
+        if (existing is null)
+        {
+            return;
+        }
+
+        var derived = BuildDerivedProject(existing);
+        if (derived.Kpi == existing.Kpi && derived.Progress == existing.Progress)
+        {
+            return;
+        }
+
+        repository.SaveProject(derived, actorName, false);
+    }
 
     private static string GetRiskLevel(InnovationProject project)
     {
@@ -1465,7 +1600,7 @@ Nenshkrim dixhital: {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{actor.Id}:
             item.MeetingUrl,
             item.Platform,
             item.ScheduledAtUtc.ToString("o"),
-            item.ScheduledAtUtc.ToLocalTime().ToString("dddd, dd MMMM yyyy '·' HH:mm"),
+            item.ScheduledAtUtc.ToLocalTime().ToString("dddd, dd MMMM yyyy 'Â·' HH:mm"),
             item.DurationMinutes,
             item.Status,
             item.Notes,
@@ -1783,92 +1918,4 @@ Nenshkrim dixhital: {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{actor.Id}:
         return new DateTime(now.Year, now.Month, 1, 8, 0, 0).AddMonths(1);
     }
 
-    private string BuildMonthlyReportHtml(string monthLabel, IReadOnlyList<InnovationProject> projects)
-    {
-        var ministries = repository.GetMinistries().ToDictionary(item => item.Id, item => item.Name, StringComparer.OrdinalIgnoreCase);
-        var activeProjects = projects.Count(item => item.Status is ProjectStatus.Active or ProjectStatus.InProcess);
-        var completedProjects = projects.Count(item => item.Status == ProjectStatus.Completed);
-        var averageKpi = projects.Count == 0 ? 0 : (int)Math.Round(projects.Average(item => item.Kpi));
-        var riskProjects = projects
-            .Where(item => item.Kpi < 60 || item.DueDate < DateOnly.FromDateTime(DateTime.Today))
-            .OrderBy(item => item.Kpi)
-            .ThenBy(item => item.DueDate)
-            .Take(10)
-            .ToList();
-        var highlights = projects
-            .Where(item => item.Status == ProjectStatus.Completed)
-            .OrderByDescending(item => item.Kpi)
-            .Take(5)
-            .ToList();
-
-        var ministryRows = repository.GetMinistries()
-            .Select(ministry =>
-            {
-                var related = projects.Where(project => project.MinistryId == ministry.Id).ToList();
-                var avg = related.Count == 0 ? 0 : (int)Math.Round(related.Average(project => project.Kpi));
-                return $"<tr><td>{ministry.Name}</td><td>{related.Count(project => project.Status is ProjectStatus.Active or ProjectStatus.InProcess)}</td><td>{related.Count(project => project.Status == ProjectStatus.Completed)}</td><td>{avg}%</td><td>{(avg >= 70 ? "↑" : avg >= 50 ? "→" : "↓")}</td></tr>";
-            });
-
-        var riskRows = riskProjects.Any()
-            ? string.Join("", riskProjects.Select(project => $"<li><strong>{project.Title}</strong> · {ministries[project.MinistryId]} · KPI {project.Kpi}% · Afati {project.DueDate:dd/MM/yyyy}</li>"))
-            : "<li>Nuk ka projekte kritike per kete periudhe.</li>";
-
-        var highlightRows = highlights.Any()
-            ? string.Join("", highlights.Select(project => $"<li><strong>{project.Title}</strong> · {ministries[project.MinistryId]} · KPI final {project.Kpi}%</li>"))
-            : "<li>Nuk ka projekte te perfunduara ne kete periudhe.</li>";
-
-        return $$"""
-<!DOCTYPE html>
-<html lang="sq">
-<head>
-    <meta charset="utf-8" />
-    <title>Raporti Mujor - {{monthLabel}}</title>
-    <style>
-        body { font-family: Segoe UI, Arial, sans-serif; padding: 24px; color: #12233d; }
-        h1, h2 { margin: 0 0 12px; }
-        .hero { border-bottom: 3px solid #0b4f9c; padding-bottom: 16px; margin-bottom: 20px; }
-        .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
-        .stats article { border: 1px solid #d9e4f2; border-radius: 14px; padding: 12px; background: #f8fbff; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #d9e4f2; padding: 10px; text-align: left; }
-        th { background: #0b4f9c; color: white; }
-        ul { padding-left: 18px; }
-        footer { margin-top: 24px; color: #5f6f86; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="hero">
-        <h1>Raporti Mujor i Inovacionit Publik</h1>
-        <p>Muaji: {{monthLabel}}</p>
-    </div>
-    <section>
-        <h2>Permbledhje Ekzekutive</h2>
-        <div class="stats">
-            <article><strong>{{activeProjects}}</strong><div>Projekte aktive</div></article>
-            <article><strong>{{projects.Count}}</strong><div>Projekte totale</div></article>
-            <article><strong>{{completedProjects}}</strong><div>Projekte te perfunduara</div></article>
-            <article><strong>{{averageKpi}}%</strong><div>KPI mesatar kombetar</div></article>
-            <article><strong>{{riskProjects.Count}}</strong><div>Projekte ne risk</div></article>
-        </div>
-    </section>
-    <section>
-        <h2>Performanca sipas Ministrise</h2>
-        <table>
-            <thead><tr><th>Ministria</th><th>Aktive</th><th>Perfunduar</th><th>KPI Mesatar</th><th>Trendi</th></tr></thead>
-            <tbody>{{string.Join("", ministryRows)}}</tbody>
-        </table>
-    </section>
-    <section>
-        <h2>Projektet ne Risk</h2>
-        <ul>{{riskRows}}</ul>
-    </section>
-    <section>
-        <h2>Arritjet e Muajit</h2>
-        <ul>{{highlightRows}}</ul>
-    </section>
-    <footer>Gjeneruar automatikisht nga Innovation4Albania · {{DateTime.Now:dd/MM/yyyy HH:mm}}</footer>
-</body>
-</html>
-""";
     }
-}

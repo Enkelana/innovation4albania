@@ -112,7 +112,7 @@ public sealed class AiWorkspaceService(
         }
 
         var results = new List<SmartAlertRecommendationDto>();
-        foreach (var project in FilterProjects(user).Where(project => project.Status != ProjectStatus.Cancelled))
+        foreach (var project in FilterProjects(user).Select(BuildDerivedProject).Where(project => project.Status != ProjectStatus.Cancelled))
         {
             var risk = GetProjectRiskAnalysis(userId, project.Id, forceRefresh);
             if (risk is null || risk.Score < 35)
@@ -251,7 +251,7 @@ public sealed class AiWorkspaceService(
             return new AiChatResponseDto("Perdoruesi nuk u gjet.", false, "Perdoruesi nuk u gjet.");
         }
 
-        var visibleProjects = FilterProjects(user).ToList();
+        var visibleProjects = FilterProjects(user).Select(BuildDerivedProject).ToList();
         var context = new
         {
             role = user.Role.ToString(),
@@ -320,7 +320,10 @@ public sealed class AiWorkspaceService(
             return null;
         }
 
-        var project = FilterProjects(user).FirstOrDefault(item => item.Id == projectId);
+        var project = FilterProjects(user)
+            .Where(item => item.Id == projectId)
+            .Select(BuildDerivedProject)
+            .FirstOrDefault();
         if (project is null)
         {
             return null;
@@ -667,6 +670,13 @@ public sealed class AiWorkspaceService(
 
         return "Asistenti AI nuk ishte i disponueshem ne kete moment. Ju lutem provoni perseri ose perdorni seksionin perkates ne panel.";
     }
+
+    private InnovationProject BuildDerivedProject(InnovationProject project) =>
+        ProjectMetricsCalculator.WithDerivedMetrics(
+            project,
+            repository.GetTasks().Where(item => item.ProjectId == project.Id),
+            repository.GetWorkflowSteps().Where(item => item.ProjectId == project.Id),
+            repository.GetProjectMilestones().Where(item => item.ProjectId == project.Id));
 
     private static string FormatSigned(int value) => value > 0 ? $"+{value}" : value.ToString();
 

@@ -1,4 +1,5 @@
 using Innovation4Albania.Application.DTOs.Workspace;
+using Innovation4Albania.Application.DTOs.Reporting;
 
 namespace Innovation4Albania.Application.Interfaces;
 
@@ -6,6 +7,10 @@ public interface IWorkspaceService
 {
     WorkspaceBootstrapDto? GetWorkspace(string userId);
     ProjectDetailDto? GetProjectDetail(string userId, string projectId);
+    PortfolioKpiSnapshotDto? GetPortfolioKpiSnapshot(string userId);
+    PortfolioPeriodicReportDto? GetPortfolioDailyReport(string userId);
+    PortfolioPeriodicReportDto? GetPortfolioWeeklyReport(string userId);
+    PortfolioMonthlyReportDto? GetPortfolioMonthlyReport(string userId);
     ImportPreviewDto PreviewImport(string userId, ImportPreviewRequestDto request);
     OperationResultDto SaveProject(string userId, UpsertProjectRequestDto request);
     OperationResultDto ApplyApprovalAction(string userId, ApprovalActionRequestDto request);

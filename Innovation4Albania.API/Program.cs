@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<IPlatformRepository, PlatformRepository>();
+builder.Services.AddSingleton<IKpiReportingService, KpiReportingService>();
 builder.Services.AddSingleton<IDashboardService, DashboardService>();
 builder.Services.AddSingleton<IWorkspaceService, WorkspaceService>();
 builder.Services.AddHttpClient<IAiWorkspaceService, AiWorkspaceService>();

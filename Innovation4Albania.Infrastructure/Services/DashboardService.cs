@@ -6,7 +6,7 @@ using Innovation4Albania.Domain.Enums;
 
 namespace Innovation4Albania.Infrastructure.Services;
 
-public sealed class DashboardService(IPlatformRepository repository) : IDashboardService
+public sealed class DashboardService(IPlatformRepository repository, IKpiReportingService kpiReportingService) : IDashboardService
 {
     public IReadOnlyList<SessionUserDto> GetUsers() =>
         repository.GetUsers()
@@ -72,58 +72,18 @@ public sealed class DashboardService(IPlatformRepository repository) : IDashboar
 
         var visibleMinistries = FilterMinistries(user);
         var visibleMinistryIds = visibleMinistries.Select(ministry => ministry.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var projects = repository.GetProjects().Where(project => visibleMinistryIds.Contains(project.MinistryId)).ToList();
+        var projects = repository.GetProjects()
+            .Where(project => visibleMinistryIds.Contains(project.MinistryId))
+            .Select(BuildDerivedProject)
+            .ToList();
         var experts = repository.GetExperts().Where(expert => visibleMinistryIds.Contains(expert.MinistryId)).ToList();
         var alerts = repository.GetAlerts().Where(alert => visibleMinistryIds.Contains(alert.MinistryId)).ToList();
         var steps = repository.GetWorkflowSteps().Where(step => projects.Any(project => project.Id == step.ProjectId)).ToList();
         var milestones = repository.GetProjectMilestones().Where(item => projects.Any(project => project.Id == item.ProjectId)).ToList();
         var tasks = repository.GetTasks().Where(task => projects.Any(project => project.Id == task.ProjectId)).ToList();
-        var activeProjectsCount = projects.Count(project => project.Status is ProjectStatus.Active or ProjectStatus.InProcess);
-        var completedProjectsCount = projects.Count(project => project.Status == ProjectStatus.Completed);
-        var riskProjectsCount = projects.Count(project => GetRiskLevel(project) is "High");
-        var atRiskDeadlinesCount = projects.Count(project =>
-            project.Status is ProjectStatus.Active or ProjectStatus.InProcess &&
-            project.Progress < 50 &&
-            project.DueDate >= DateOnly.FromDateTime(DateTime.UtcNow.Date) &&
-            project.DueDate <= DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(14));
-        var achievedMilestones = milestones.Count(item => item.AchievedAtUtc.HasValue);
+        var overview = kpiReportingService.BuildOverview(projects, visibleMinistries.Count, experts.Count, tasks.Count, milestones);
 
-        var overview = new OverviewCardDto(
-            ActiveMinistries: visibleMinistries.Count,
-            TotalProjects: projects.Count,
-            TotalExperts: experts.Count,
-            RiskProjects: riskProjectsCount,
-            AverageKpi: projects.Count == 0 ? 0 : (int)Math.Round(projects.Average(project => project.Kpi)),
-            UpcomingDeadlines: projects.Count(project =>
-                project.DueDate >= DateOnly.FromDateTime(DateTime.UtcNow.Date) &&
-                project.DueDate <= DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(14)),
-            PendingApprovals: projects.Count(project => project.ApprovalStage == ApprovalStage.UnderReview),
-            CompletedProjects: completedProjectsCount,
-            RiskRate: activeProjectsCount == 0 ? 0 : (int)Math.Round((double)riskProjectsCount / activeProjectsCount * 100),
-            AtRiskDeadlines: atRiskDeadlinesCount,
-            AverageProgress: projects.Count == 0 ? 0 : (int)Math.Round(projects.Average(project => project.Progress)),
-            MilestoneCompletionRate: milestones.Count == 0 ? 0 : (int)Math.Round((double)achievedMilestones / milestones.Count * 100),
-            AverageTasksPerExpert: experts.Count == 0 ? 0 : (int)Math.Round((double)tasks.Count / experts.Count));
-
-        var ministryBoard = visibleMinistries
-            .Select(ministry =>
-            {
-                var ministryProjects = projects.Where(project => project.MinistryId == ministry.Id).ToList();
-                return new MinistryBoardItemDto(
-                    ministry.Id,
-                    ministry.Name,
-                    ministry.Acronym,
-                    experts.Count(expert => expert.MinistryId == ministry.Id),
-                    ministryProjects.Count,
-                    ministryProjects.Count(project => project.Status == ProjectStatus.Active),
-                    ministryProjects.Count(project => project.Status == ProjectStatus.InProcess),
-                    ministryProjects.Count(project => project.Status == ProjectStatus.Completed),
-                    ministryProjects.Count(project => project.Status == ProjectStatus.Cancelled),
-                    ministryProjects.Count == 0 ? 0 : (int)Math.Round(ministryProjects.Average(project => project.Kpi)),
-                    GetHealthStatus(ministryProjects));
-            })
-            .OrderBy(item => item.MinistryName)
-            .ToList();
+        var ministryBoard = kpiReportingService.BuildMinistryBoard(visibleMinistries, projects, experts);
 
         var ministriesById = visibleMinistries.ToDictionary(ministry => ministry.Id, ministry => ministry.Name, StringComparer.OrdinalIgnoreCase);
         var projectsById = projects.ToDictionary(project => project.Id, StringComparer.OrdinalIgnoreCase);
@@ -141,7 +101,7 @@ public sealed class DashboardService(IPlatformRepository repository) : IDashboar
                 project.Progress,
                 project.StartDate,
                 project.DueDate,
-                GetRiskLevel(project),
+                kpiReportingService.GetProjectRiskLevel(project),
                 project.CancellationReason))
             .ToList();
 
@@ -173,7 +133,7 @@ public sealed class DashboardService(IPlatformRepository repository) : IDashboar
             })
             .ToList();
 
-        var timeline = BuildTimeline(projects);
+        var timeline = kpiReportingService.BuildTimeline(projects);
 
         var logs = IsDirectorLike(user)
             ? repository.GetHistoryLogs()
@@ -229,61 +189,11 @@ public sealed class DashboardService(IPlatformRepository repository) : IDashboar
     private static bool IsMinistryScopedRole(PlatformUser user) =>
         user.Role is UserRole.Expert or UserRole.NucleusDirector;
 
-    private static string GetRiskLevel(InnovationProject project)
-    {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
-        if (project.Status == ProjectStatus.Cancelled || project.Kpi < 40 || project.DueDate < today)
-        {
-            return "High";
-        }
+    private InnovationProject BuildDerivedProject(InnovationProject project) =>
+        ProjectMetricsCalculator.WithDerivedMetrics(
+            project,
+            repository.GetTasks().Where(item => item.ProjectId == project.Id),
+            repository.GetWorkflowSteps().Where(item => item.ProjectId == project.Id),
+            repository.GetProjectMilestones().Where(item => item.ProjectId == project.Id));
 
-        if (project.Kpi <= 70 || project.DueDate <= today.AddDays(14))
-        {
-            return "Medium";
-        }
-
-        return "Low";
-    }
-
-    private static string GetHealthStatus(IEnumerable<InnovationProject> projects)
-    {
-        var projectList = projects.ToList();
-        if (projectList.Count == 0)
-        {
-            return "No data";
-        }
-
-        var averageKpi = projectList.Average(project => project.Kpi);
-        if (averageKpi < 50 || projectList.Any(project => GetRiskLevel(project) == "High"))
-        {
-            return "Needs attention";
-        }
-
-        if (averageKpi < 70)
-        {
-            return "Watchlist";
-        }
-
-        return "On track";
-    }
-
-    private static IReadOnlyList<TimelinePointDto> BuildTimeline(IReadOnlyList<InnovationProject> projects)
-    {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
-        var monthAnchor = new DateOnly(today.Year, today.Month, 1);
-        var points = new List<TimelinePointDto>();
-
-        for (var monthsBack = 5; monthsBack >= 0; monthsBack--)
-        {
-            var monthStart = monthAnchor.AddMonths(-monthsBack);
-            var monthEnd = monthStart.AddMonths(1).AddDays(-1);
-
-            points.Add(new TimelinePointDto(
-                monthStart.ToString("MMM yyyy"),
-                projects.Count(project => project.StartDate >= monthStart && project.StartDate <= monthEnd),
-                projects.Count(project => project.Status == ProjectStatus.Completed && project.DueDate >= monthStart && project.DueDate <= monthEnd)));
-        }
-
-        return points;
-    }
 }

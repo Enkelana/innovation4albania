@@ -173,13 +173,41 @@ public sealed class WorkspaceController(IWorkspaceService workspaceService) : Co
         return preview is null ? NotFound() : Ok(preview);
     }
 
+    [HttpGet("reports/kpis")]
+    public IActionResult GetPortfolioKpis([FromQuery] string userId)
+    {
+        var snapshot = workspaceService.GetPortfolioKpiSnapshot(userId);
+        return snapshot is null ? NotFound() : Ok(snapshot);
+    }
+
+    [HttpGet("reports/daily")]
+    public IActionResult GetPortfolioDailyReport([FromQuery] string userId)
+    {
+        var report = workspaceService.GetPortfolioDailyReport(userId);
+        return report is null ? NotFound() : Ok(report);
+    }
+
+    [HttpGet("reports/weekly")]
+    public IActionResult GetPortfolioWeeklyReport([FromQuery] string userId)
+    {
+        var report = workspaceService.GetPortfolioWeeklyReport(userId);
+        return report is null ? NotFound() : Ok(report);
+    }
+
+    [HttpGet("reports/monthly")]
+    public IActionResult GetPortfolioMonthlyReport([FromQuery] string userId)
+    {
+        var report = workspaceService.GetPortfolioMonthlyReport(userId);
+        return report is null ? NotFound() : Ok(report);
+    }
+
     [HttpGet("reports/monthly/export")]
     public IActionResult ExportMonthlyReport([FromQuery] string userId)
     {
-        var preview = workspaceService.GetMonthlyReportPreview(userId);
-        return preview is null
+        var report = workspaceService.GetPortfolioMonthlyReport(userId);
+        return report is null
             ? NotFound()
-            : Content(preview.Html, "text/html; charset=utf-8", Encoding.UTF8);
+            : Content(report.Html, "text/html; charset=utf-8", Encoding.UTF8);
     }
 
     [HttpPut("reports/monthly/settings")]
