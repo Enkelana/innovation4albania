@@ -10,6 +10,10 @@ let riskHeatmapFilter = "critical";
 let pdfExtractionHistoryState = [];
 let aiChatHistory = [];
 let importPreviewState = null;
+let portfolioKpiSnapshotState = null;
+let dailyReportState = null;
+let weeklyReportState = null;
+let monthlyPortfolioReportState = null;
 
 const muajt2026 = [
     "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
@@ -846,6 +850,188 @@ function isEnglish() {
 
 function pickText(shqip, english) {
     return isEnglish() ? english : shqip;
+}
+
+function signedNumber(value, suffix = "") {
+    const number = Number(value ?? 0);
+    if (number > 0) {
+        return `+${number}${suffix}`;
+    }
+    return `${number}${suffix}`;
+}
+
+function reportProjectLine(project) {
+    return `
+        <li>
+            <strong>${project.title}</strong>
+            <div class="report-ministry-meta">
+                <span>${project.ministryName}</span>
+                <span>KPI ${project.kpi}%</span>
+                <span>${project.dueDateLabel}</span>
+            </div>
+        </li>
+    `;
+}
+
+function renderReportingKpiSnapshot() {
+    const host = document.getElementById("reportingKpiSnapshot");
+    if (!host) {
+        return;
+    }
+
+    if (!portfolioKpiSnapshotState) {
+        host.innerHTML = `<div class="empty-state">${pickText("Treguesit e raportimit nuk u ngarkuan ende.", "Reporting metrics are not loaded yet.")}</div>`;
+        return;
+    }
+
+    const snapshot = portfolioKpiSnapshotState;
+    const cards = [
+        [pickText("Projektet aktive", "Active projects"), snapshot.activeProjects, pickText("Portofoli aktual në ekzekutim.", "Current portfolio in execution.")],
+        [pickText("Përfunduar", "Completed"), snapshot.completedProjects, pickText("Projektet e mbyllura me sukses.", "Projects closed successfully.")],
+        [pickText("Në kohë", "On time"), `${snapshot.onTimeCompletionRate}%`, pickText("Norma e përfundimit sipas afatit.", "Completion rate against due dates.")],
+        [pickText("Në risk", "At risk"), `${snapshot.riskRate}%`, pickText("Pesha e projekteve me risk në portofol.", "Share of projects in risk.")],
+        [pickText("Vonesa mesatare", "Average delay"), `${snapshot.averageDelayDays} ${pickText("ditë", "days")}`, pickText("Mesatarja e ditëve të devijimit.", "Average day deviation.")],
+        [pickText("Devijimi i planit", "Plan deviation"), signedNumber(snapshot.planDeviationDays, ` ${pickText("ditë", "days")}`), pickText("Diferenca mes planit dhe ritmit real.", "Gap between plan and actual pace.")],
+        [pickText("Afate në risk", "Deadlines at risk"), snapshot.atRiskDeadlines, pickText("Projektet me afat të afërt dhe progres të ulët.", "Projects near due date with low progress.")],
+        [pickText("Progresi mesatar", "Average progress"), `${snapshot.averageProgress}%`, pickText("Mesatarja e progresit të portofolit.", "Average progress across the portfolio.")],
+        [pickText("Milestone rate", "Milestone rate"), `${snapshot.milestoneCompletionRate}%`, pickText("Norma e milestone-ve të përfunduara.", "Completed milestone ratio.")],
+        [pickText("Task / ekspert", "Tasks / expert"), snapshot.averageTasksPerExpert, pickText("Ngarkesa mesatare operative.", "Average operational workload.")],
+        [pickText("Risk kritik", "Critical risk"), snapshot.criticalRiskProjects, pickText("Projektet që kërkojnë ndërhyrje të menjëhershme.", "Projects requiring urgent attention.")],
+        [pickText("Risk index", "Risk index"), Number(snapshot.riskIndex ?? 0).toFixed(2), pickText("Indeksi i përgjithshëm i riskut.", "Overall portfolio risk index.")]
+    ];
+
+    host.innerHTML = cards.map(([label, value, note]) => `
+        <article class="reporting-kpi-card">
+            <span>${label}</span>
+            <strong>${value}</strong>
+            <small>${note}</small>
+        </article>
+    `).join("");
+}
+
+function renderPeriodicReportPreview(report, options = {}) {
+    const node = document.getElementById("monthlyReportPreview");
+    if (!node) {
+        return;
+    }
+
+    if (!report) {
+        node.classList.remove("hidden");
+        node.innerHTML = `<div class="empty-state">${pickText("Raporti nuk u gjet.", "Report not found.")}</div>`;
+        return;
+    }
+
+    const isMonthly = options.isMonthly === true;
+    const ministriesBlock = isMonthly
+        ? `
+            <div class="report-list-card">
+                <strong>${pickText("Performanca sipas ministrive", "Performance by ministry")}</strong>
+                <div class="report-ministry-list">
+                    ${report.ministries?.map((item) => `
+                        <div class="report-ministry-row">
+                            <div class="report-ministry-top">
+                                <strong>${item.ministryName}</strong>
+                                <span class="pill ${item.healthStatus === "On track" ? "success" : item.healthStatus === "Watchlist" ? "warning" : "critical"}">${gjendjaShqip(item.healthStatus)}</span>
+                            </div>
+                            <div class="report-ministry-meta">
+                                <span>${pickText("Aktive", "Active")}: ${item.activeProjects}</span>
+                                <span>${pickText("Përfunduar", "Completed")}: ${item.completedProjects}</span>
+                                <span>KPI ${item.averageKpi}%</span>
+                                <span>${item.trendIndicator}</span>
+                            </div>
+                        </div>
+                    `).join("") || `<div class="empty-state">${pickText("Nuk ka të dhëna sipas ministrive.", "No ministry data available.")}</div>`}
+                </div>
+            </div>
+        `
+        : "";
+
+    const snapshot = isMonthly
+        ? {
+            activeProjects: report.activeProjects,
+            completedProjects: report.completedProjects,
+            averageProgress: report.averageKpi,
+            riskRate: report.riskProjects
+        }
+        : report.snapshot;
+
+    const summaryCards = [
+        [pickText("Aktive", "Active"), snapshot.activeProjects],
+        [pickText("Përfunduar", "Completed"), snapshot.completedProjects],
+        [pickText("Progres / KPI", "Progress / KPI"), `${snapshot.averageProgress}%`],
+        [pickText("Risk", "Risk"), isMonthly ? report.riskProjects : `${snapshot.riskRate}%`]
+    ];
+
+    node.classList.remove("hidden");
+    node.innerHTML = `
+        <div class="report-section">
+            <div class="report-section-header">
+                <div>
+                    <span class="section-kicker">${isMonthly ? pickText("Raport mujor", "Monthly report") : report.periodType}</span>
+                    <h3>${isMonthly ? report.monthLabel : report.periodLabel}</h3>
+                </div>
+                ${isMonthly ? `<button class="ghost-button" type="button" id="printMonthlyPreviewButton">${pickText("Printo raportin", "Print report")}</button>` : ""}
+            </div>
+            <div class="report-mini-grid">
+                ${summaryCards.map(([label, value]) => `
+                    <div class="report-mini-card">
+                        <span>${label}</span>
+                        <strong>${value}</strong>
+                    </div>
+                `).join("")}
+            </div>
+            <div class="report-list-grid">
+                <div class="report-list-card">
+                    <strong>${pickText("Projektet prioritare", "Priority projects")}</strong>
+                    ${report.priorityProjects?.length || report.atRiskProjects?.length
+                        ? `<ul>${(report.priorityProjects ?? report.atRiskProjects).map(reportProjectLine).join("")}</ul>`
+                        : `<div class="empty-state">${pickText("Nuk ka projekte prioritare.", "No priority projects.")}</div>`}
+                </div>
+                <div class="report-list-card">
+                    <strong>${pickText("Pikat kryesore", "Highlights")}</strong>
+                    ${report.highlights?.length
+                        ? `<ul>${report.highlights.map(reportProjectLine).join("")}</ul>`
+                        : `<div class="empty-state">${pickText("Nuk ka pika kryesore për këtë periudhë.", "No highlights for this period.")}</div>`}
+                </div>
+            </div>
+            ${ministriesBlock}
+        </div>
+    `;
+
+    document.getElementById("printMonthlyPreviewButton")?.addEventListener("click", () => {
+        window.open(`/api/workspace/reports/monthly/export?userId=${encodeURIComponent(currentUserId)}`, "_blank", "noopener");
+    });
+}
+
+async function refreshReportingPanel() {
+    if (!workspaceState || !isDirectorLike(workspaceState.dashboard.currentUser.role)) {
+        return;
+    }
+
+    const host = document.getElementById("monthlyReportPreview");
+    const snapshotHost = document.getElementById("reportingKpiSnapshot");
+    if (snapshotHost) {
+        snapshotHost.innerHTML = `<div class="muted-row">${pickText("Duke ngarkuar treguesit e raportimit...", "Loading reporting metrics...")}</div>`;
+    }
+    if (host) {
+        host.classList.remove("hidden");
+        host.innerHTML = `<div class="muted-row">${pickText("Duke ngarkuar raportin fillestar...", "Loading initial report...")}</div>`;
+    }
+
+    const [snapshot, daily, weekly, monthly] = await Promise.all([
+        fetchJson(`/api/workspace/reports/kpis?userId=${encodeURIComponent(currentUserId)}`),
+        fetchJson(`/api/workspace/reports/daily?userId=${encodeURIComponent(currentUserId)}`),
+        fetchJson(`/api/workspace/reports/weekly?userId=${encodeURIComponent(currentUserId)}`),
+        fetchJson(`/api/workspace/reports/monthly?userId=${encodeURIComponent(currentUserId)}`)
+    ]);
+
+    portfolioKpiSnapshotState = snapshot;
+    dailyReportState = daily;
+    weeklyReportState = weekly;
+    monthlyPortfolioReportState = monthly;
+
+    renderReportingKpiSnapshot();
+    renderPeriodicReportPreview(monthlyPortfolioReportState, { isMonthly: true });
 }
 
 function updateChromeControls() {
@@ -3398,6 +3584,8 @@ function renderMonthlyReportsCard() {
     const card = document.getElementById("monthlyReportsCard");
     const status = document.getElementById("monthlyReportStatus");
     const toggle = document.getElementById("monthlyReportsEnabled");
+    const snapshotHost = document.getElementById("reportingKpiSnapshot");
+    const previewHost = document.getElementById("monthlyReportPreview");
     if (!card || !status || !toggle || !workspaceState) {
         return;
     }
@@ -3405,6 +3593,10 @@ function renderMonthlyReportsCard() {
     const role = workspaceState.dashboard.currentUser.role;
     card.style.display = isDirectorLike(role) ? "" : "none";
     if (!isDirectorLike(role)) {
+        if (previewHost) {
+            previewHost.classList.add("hidden");
+            previewHost.innerHTML = "";
+        }
         return;
     }
 
@@ -3416,6 +3608,13 @@ function renderMonthlyReportsCard() {
         <span>Ekzekutimi i ardhshem: ${monthly.nextScheduledRun}</span>
     `;
     toggle.checked = monthly.isEnabled;
+    if (snapshotHost && !portfolioKpiSnapshotState) {
+        snapshotHost.innerHTML = `<div class="muted-row">${pickText("Duke ngarkuar treguesit e raportimit...", "Loading reporting metrics...")}</div>`;
+    }
+    if (previewHost && !dailyReportState && !weeklyReportState && !monthlyPortfolioReportState) {
+        previewHost.classList.remove("hidden");
+        previewHost.innerHTML = `<div class="muted-row">${pickText("Duke ngarkuar raportet ditore, javore dhe mujore...", "Loading daily, weekly and monthly reports...")}</div>`;
+    }
 }
 
 function renderLogs() {
@@ -4084,6 +4283,17 @@ function renderWorkspace() {
     renderPeriodComparison();
     renderRegionalMap();
     renderMonthlyReportsCard();
+    refreshReportingPanel().catch(() => {
+        const snapshotHost = document.getElementById("reportingKpiSnapshot");
+        const previewHost = document.getElementById("monthlyReportPreview");
+        if (snapshotHost) {
+            snapshotHost.innerHTML = `<div class="empty-state">${pickText("Treguesit e raportimit nuk u ngarkuan dot.", "Reporting metrics could not be loaded.")}</div>`;
+        }
+        if (previewHost) {
+            previewHost.classList.remove("hidden");
+            previewHost.innerHTML = `<div class="empty-state">${pickText("Raportet ditore, javore dhe mujore nuk u ngarkuan dot.", "Daily, weekly and monthly reports could not be loaded.")}</div>`;
+        }
+    });
     renderGlobalAlertBanner();
     renderRiskHeatmap().catch(() => {});
     renderSmartAlerts().catch(() => {});
@@ -4622,15 +4832,25 @@ document.getElementById("monthlyReportsEnabled")?.addEventListener("change", asy
     }
 });
 
+document.getElementById("previewDailyReportButton")?.addEventListener("click", async () => {
+    if (!dailyReportState) {
+        dailyReportState = await fetchJson(`/api/workspace/reports/daily?userId=${encodeURIComponent(currentUserId)}`);
+    }
+    renderPeriodicReportPreview(dailyReportState);
+});
+
+document.getElementById("previewWeeklyReportButton")?.addEventListener("click", async () => {
+    if (!weeklyReportState) {
+        weeklyReportState = await fetchJson(`/api/workspace/reports/weekly?userId=${encodeURIComponent(currentUserId)}`);
+    }
+    renderPeriodicReportPreview(weeklyReportState);
+});
+
 document.getElementById("previewMonthlyReportButton")?.addEventListener("click", async () => {
-    const preview = await fetchJson(`/api/workspace/reports/monthly/preview?userId=${encodeURIComponent(currentUserId)}`);
-    const node = document.getElementById("monthlyReportPreview");
-    const parsed = new DOMParser().parseFromString(preview.html, "text/html");
-    node.classList.remove("hidden");
-    node.innerHTML = `<strong>${preview.monthLabel}</strong><div class="form-actions" style="margin-top:12px;"><button class="ghost-button" type="button" id="printMonthlyPreviewButton">${pickText("Printo Raportin", "Print Report")}</button></div><div style="margin-top:12px;">${parsed.body.innerHTML}</div>`;
-    document.getElementById("printMonthlyPreviewButton")?.addEventListener("click", () => {
-        window.open(`/api/workspace/reports/monthly/export?userId=${encodeURIComponent(currentUserId)}`, "_blank", "noopener");
-    });
+    if (!monthlyPortfolioReportState) {
+        monthlyPortfolioReportState = await fetchJson(`/api/workspace/reports/monthly?userId=${encodeURIComponent(currentUserId)}`);
+    }
+    renderPeriodicReportPreview(monthlyPortfolioReportState, { isMonthly: true });
 });
 
 document.getElementById("openMonthlyReportWindowButton")?.addEventListener("click", () => {
