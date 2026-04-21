@@ -4903,18 +4903,18 @@ window.addEventListener("popstate", async () => {
     }
 });
 
-function startWorkspacePolling() {
-    if (workspacePollId) {
-        clearInterval(workspacePollId);
-    }
+//function startWorkspacePolling() {
+//    if (workspacePollId) {
+//        clearInterval(workspacePollId);
+//    }
 
-    workspacePollId = setInterval(() => {
-        loadWorkspace(false).catch(() => {});
-        if (currentProjectDetail?.projectId) {
-            loadProjectDetail(currentProjectDetail.projectId).catch(() => {});
-        }
-    }, 15000);
-}
+//    workspacePollId = setInterval(() => {
+//        loadWorkspace(false).catch(() => {});
+//        if (currentProjectDetail?.projectId) {
+//            loadProjectDetail(currentProjectDetail.projectId).catch(() => {});
+//        }
+//    }, 15000);
+//}
 
 function launchExpertOnboarding() {
     const user = workspaceState?.dashboard?.currentUser;
